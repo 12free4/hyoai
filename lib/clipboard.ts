@@ -17,7 +17,9 @@ export async function copyText(text: string): Promise<void> {
 
     try {
         document.body.appendChild(textarea);
-        textarea.select();
+        textarea.focus();
+		textarea.select();
+		textarea.setSelectionRange(0, textarea.value.length);
         if (document.execCommand("copy")) return;
     } catch {
         // Report a consistent error for all fallback failures.
