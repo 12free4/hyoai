@@ -7,6 +7,7 @@
         "delete": "Supprimer",
         "copy": "Copier",
         "copied": "Copié",
+        "copyFailed": "Échec de la copie dans le presse-papiers",
         "copyLink": "Copier le lien",
         "linkCopied": "Lien copié",
         "edit": "Modifier",

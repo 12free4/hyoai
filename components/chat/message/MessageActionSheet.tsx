@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useIsMobile, useOnBreakpointCross } from "@/hooks/useMediaQuery";
 import { useMessageActions } from "@/hooks/useMessageActions";
 import { useMessageFeedback } from "@/hooks/useMessageFeedback";
+import { copyText } from "@/lib/clipboard";
 import { cn } from "@/lib/utils";
 import type { MessageNode } from "@/types/chat";
 
@@ -61,7 +62,7 @@ interface MessageActionSheetProps {
  * dismiss) it renders the same shared ordered action list as the desktop bar,
  * with the feedback thumbs and their comment field laid out as full-width rows.
  *
- * Every action is deferred until the close animation ends: switching branch or
+ * Actions that can unmount the row are deferred until the close animation ends: switching branch or
  * deleting unmounts this row, so running the action immediately would make the
  * drawer vanish without its exit animation.
  *
@@ -95,8 +96,12 @@ export function MessageActionSheet({ node, open, onOpenChange, onEdit }: Message
 
     // Copy the message content to the clipboard, then show a toast.
     const handleCopy = async (text: string) => {
-        await navigator.clipboard.writeText(text);
-        toast.success(tc("copied"));
+        try {
+            await copyText(text);
+            toast.success(tc("copied"));
+        } catch {
+            toast.error(tc("copyFailed"));
+        }
     };
 
     return (
@@ -146,7 +151,10 @@ export function MessageActionSheet({ node, open, onOpenChange, onEdit }: Message
                                 return (
                                     <DrawerActionRow
                                         key="copy"
-                                        onClick={() => run(() => void handleCopy(action.text))}
+                                        onClick={() => {
+                                            void handleCopy(action.text);
+                                            onOpenChange(false);
+                                        }}
                                     >
                                         <Copy aria-hidden="true" />
                                         {action.label}

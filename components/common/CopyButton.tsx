@@ -1,10 +1,13 @@
 "use client";
 
 import { Check, Copy } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { copyText } from "@/lib/clipboard";
 
 interface CopyButtonProps {
     text: string;
@@ -23,6 +26,7 @@ interface CopyButtonProps {
  * @param className - Extra classes for the button
  */
 export function CopyButton({ text, label, copiedLabel, className }: CopyButtonProps) {
+    const t = useTranslations("common");
     const [copied, setCopied] = useState(false);
     const timeoutRef = useRef<number | null>(null);
 
@@ -34,12 +38,13 @@ export function CopyButton({ text, label, copiedLabel, className }: CopyButtonPr
 
     const handleCopy = async () => {
         try {
-            await navigator.clipboard.writeText(text);
+            await copyText(text);
             setCopied(true);
             if (timeoutRef.current !== null) window.clearTimeout(timeoutRef.current);
             timeoutRef.current = window.setTimeout(() => setCopied(false), 2000);
         } catch {
-            // Clipboard may be unavailable (permissions, http origin); ignore
+            setCopied(false);
+            toast.error(t("copyFailed"));
         }
     };
 

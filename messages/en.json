@@ -7,6 +7,7 @@
         "delete": "Delete",
         "copy": "Copy",
         "copied": "Copied",
+        "copyFailed": "Failed to copy to clipboard",
         "copyLink": "Copy link",
         "linkCopied": "Link copied",
         "edit": "Edit",
