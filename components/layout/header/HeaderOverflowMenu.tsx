@@ -1,8 +1,7 @@
 "use client";
 
-import { Check, Link, Monitor, Moon, MoreVertical, Sun } from "lucide-react";
+import { Check, Link, MoreVertical } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useTheme } from "next-themes";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -13,6 +12,7 @@ import {
     ResponsiveMenuSeparator,
 } from "@/components/common/ResponsiveMenu";
 import { Button } from "@/components/ui/button";
+import { useTheme } from "@/hooks/useAppTheme";
 import { useIsMobile, useOnBreakpointCross } from "@/hooks/useMediaQuery";
 import { useStore } from "@/hooks/useStore";
 import { localeStore, setLocale } from "@/lib/stores/locale";
@@ -29,10 +29,9 @@ const SKINS: SkinId[] = ["soft", "flat", "contrast", "warm", "forest", "dim"];
  */
 export function HeaderOverflowMenu() {
     const t = useTranslations("header");
-    const tt = useTranslations("header.theme");
+    const { theme, setTheme } = useTheme();
     const tsk = useTranslations("header.skin");
     const tc = useTranslations("common");
-    const { theme, setTheme } = useTheme();
     const locale = useStore(localeStore, (state) => state.locale);
     const skin = useStore(settingsStore, (state) => state.settings.skin);
     const [open, setOpen] = useState(false);
@@ -67,23 +66,13 @@ export function HeaderOverflowMenu() {
                 </Button>
             }
         >
-            <ResponsiveMenuLabel>{tt("label")}</ResponsiveMenuLabel>
-            <ResponsiveMenuItem onSelect={() => setTheme("light")} closeOnSelect={false}>
-                <Sun aria-hidden="true" />
-                <span className="flex-1">{tt("light")}</span>
-                {theme === "light" && <Check aria-hidden="true" />}
-            </ResponsiveMenuItem>
-            <ResponsiveMenuItem onSelect={() => setTheme("dark")} closeOnSelect={false}>
-                <Moon aria-hidden="true" />
-                <span className="flex-1">{tt("dark")}</span>
-                {theme === "dark" && <Check aria-hidden="true" />}
-            </ResponsiveMenuItem>
-            <ResponsiveMenuItem onSelect={() => setTheme("system")} closeOnSelect={false}>
-                <Monitor aria-hidden="true" />
-                <span className="flex-1">{tt("system")}</span>
-                {theme === "system" && <Check aria-hidden="true" />}
-            </ResponsiveMenuItem>
-
+            <ResponsiveMenuLabel>{t("theme.label")}</ResponsiveMenuLabel>
+            {["light", "dark", "system"].map((id) => (
+                <ResponsiveMenuItem key={id} onSelect={() => setTheme(id)} closeOnSelect={false}>
+                    <span className="flex-1">{t(`theme.${id}`)}</span>
+                    {theme === id && <Check aria-hidden="true" />}
+                </ResponsiveMenuItem>
+            ))}
             <ResponsiveMenuSeparator />
             <ResponsiveMenuLabel>{t("language")}</ResponsiveMenuLabel>
             {LOCALES.map(({ id, label }) => (

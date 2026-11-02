@@ -380,3 +380,17 @@ export function stopAllPanes(): void {
         getPaneInstance(pane.paneId).stopGeneration();
     }
 }
+
+/** Replace pane runtimes so late async callbacks cannot write into a new conversation. */
+export function resetPaneConversations(id?: string): void {
+    const current = compareStore.getState();
+    if (id && !current.panes.some((pane) => pane.conversationId === id)) return;
+    const panes = current.panes.map((pane) => {
+        if (id && pane.conversationId !== id) return pane;
+        disposePane(pane.paneId);
+        return createPaneDescriptor({ ...pane, conversationId: null });
+    });
+    setPanes(panes);
+    if (!panes.some((p) => p.paneId === current.focusedPaneId))
+        setFocusedPane(panes[0]?.paneId ?? null);
+}

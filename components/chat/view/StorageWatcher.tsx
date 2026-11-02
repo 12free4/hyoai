@@ -14,7 +14,7 @@ import {
 import { openSettings } from "@/lib/stores/ui";
 
 /**
- * Headless watcher that warns once with a toast when localStorage usage
+ * Headless watcher that warns once with a toast when browser storage usage
  * crosses the near-full threshold, wherever the user is in the app. The
  * store latch keeps it from repeating until usage drops back down.
  */

@@ -10,7 +10,7 @@ export const COMPRESSED_SENTINEL = "\u0001";
 
 /**
  * Codec compressing conversation payloads with lz-string UTF-16 mode, which
- * is safe to store in localStorage (UTF-16 backed) and roughly halves usage.
+ * is safe to store in browser storage (UTF-16 backed) and roughly halves usage.
  */
 export const lzCodec: Codec = {
     /**

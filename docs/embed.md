@@ -65,16 +65,13 @@ Once a conversation is open the composer is always docked at the bottom, so
 
 Every default above is the application's built-in one, not what the user picked
 in the full app: the widget deliberately skips the settings hydration, so a
-preference that has no URL parameter cannot be carried over. The colour theme is
-the one exception, since `next-themes` keeps its own storage key and reads it
-back — without `?theme` the widget follows the theme last used on that origin
-and falls back to `system`. Worth knowing too: the chat column width has no
+preference that has no URL parameter cannot be carried over. The colour theme uses `next-themes` in memory; without `?theme` it falls back to `system`. Embed overrides never persist a theme. The chat column width has no
 parameter, so a widget always starts at the `medium` column however wide its
 iframe is.
 
 ## Storage isolation
 
-A host page and its widget share one origin, therefore one `localStorage`. The
+A host page and its widget share one origin, therefore one IndexedDB database. The
 widget guards against trampling the full app's saved preferences with a write
 gate installed at boot:
 
@@ -84,7 +81,7 @@ gate installed at boot:
   are admitted, so history persists while settings still do not.
 
 The gate filters writes only, reads are untouched. In the sidebar variant the widget also listens for
-cross-tab `storage` events, so a full-app tab open next to it follows along as
+BroadcastChannel notifications, then reads consistent IndexedDB snapshots, so a full-app tab open next to it follows along as
 the widget generates and persists.
 
 ## The postMessage bridge

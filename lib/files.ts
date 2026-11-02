@@ -39,7 +39,7 @@ function readAsDataUri(file: File): Promise<string> {
 /**
  * Read a plain-text file into a text attachment.
  * Binary content (NUL bytes) and oversized files are rejected, since the
- * payload ends up inline in localStorage and in the prompt.
+ * payload ends up inline in browser storage and in the prompt.
  *
  * @param file - Text file picked, pasted or dropped by the user
  * @returns Text attachment holding the file content

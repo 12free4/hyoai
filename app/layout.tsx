@@ -3,7 +3,6 @@ import { Inter, JetBrains_Mono, Sora } from "next/font/google";
 
 import { Providers } from "@/app/providers";
 import { DEFAULT_SETTINGS, LOCALES, SKIN_IDS } from "@/types/settings";
-import { STORAGE_KEYS } from "@/types/storage";
 
 import "katex/dist/katex.min.css";
 import "./globals.css";
@@ -33,16 +32,15 @@ export const metadata: Metadata = {
  * Pre-paint boot: applies the skin and, in embed mode, the locale and theme
  * before first paint to avoid any flash, mirroring what next-themes does for the
  * dark class. In embed mode the look comes from the URL so the widget paints the
- * host's requested skin/theme immediately; otherwise the persisted skin is read
- * from localStorage. The skin list, storage key and default are interpolated
- * from the shared sources so the script never duplicates them. A failure leaves
+ * host's requested skin/theme immediately; otherwise isolated boot-cache hints are used until
+ * hydration. Skin and locale defaults come from shared constants. A failure leaves
  * the default skin. Outside embed mode the locale has no pre-paint visual impact
  * and is resolved at mount by hydrateLocale.
  */
 const DEFAULT_LOCALE = LOCALES[0].id;
 const LOCALE_IDS = LOCALES.map((entry) => entry.id);
 
-const bootScript = `(function(){try{var d=document.documentElement;var SK=${JSON.stringify(SKIN_IDS)};var DEF=${JSON.stringify(DEFAULT_SETTINGS.skin)};var EL=${JSON.stringify(LOCALE_IDS)};var DL=${JSON.stringify(DEFAULT_LOCALE)};var q=new URLSearchParams(location.search);if(q.has("embed")){d.dataset.embed="1";var es=q.get("skin");d.dataset.skin=(SK.indexOf(es)>=0)?es:DEF;var el=q.get("lang");var bl=(navigator.language||DL).slice(0,2);d.lang=(EL.indexOf(el)>=0)?el:((EL.indexOf(bl)>=0)?bl:DL);var et=q.get("theme");if(et==="dark"||et==="light"){d.classList.toggle("dark",et==="dark");}}else{var s=localStorage.getItem(${JSON.stringify(STORAGE_KEYS.skin)});d.dataset.skin=(SK.indexOf(s)>=0)?s:DEF;var sl=localStorage.getItem(${JSON.stringify(STORAGE_KEYS.locale)});if(EL.indexOf(sl)>=0){d.lang=sl;}}}catch(e){document.documentElement.dataset.skin=${JSON.stringify(DEFAULT_SETTINGS.skin)};}})();`;
+const bootScript = `(function(){try{var d=document.documentElement;var SK=${JSON.stringify(SKIN_IDS)};var DEF=${JSON.stringify(DEFAULT_SETTINGS.skin)};var EL=${JSON.stringify(LOCALE_IDS)};var DL=${JSON.stringify(DEFAULT_LOCALE)};var q=new URLSearchParams(location.search);if(q.has("embed")){d.dataset.embed="1";var es=q.get("skin");d.dataset.skin=(SK.indexOf(es)>=0)?es:DEF;var el=q.get("lang");var bl=(navigator.language||DL).slice(0,2);d.lang=(EL.indexOf(el)>=0)?el:((EL.indexOf(bl)>=0)?bl:DL);var et=q.get("theme");if(et==="dark"||et==="light"){d.classList.toggle("dark",et==="dark");}}else{var cs=null,cl=null;try{cs=localStorage.getItem("hyoai:boot:skin");cl=localStorage.getItem("hyoai:boot:locale");}catch(e){}d.dataset.skin=SK.indexOf(cs)>=0?cs:DEF;d.lang=EL.indexOf(cl)>=0?cl:DL;}}catch(e){document.documentElement.dataset.skin=${JSON.stringify(DEFAULT_SETTINGS.skin)};}})();`;
 
 /**
  * Root layout: fonts, pre-paint boot script and client providers.

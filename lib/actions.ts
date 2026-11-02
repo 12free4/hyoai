@@ -2,12 +2,20 @@ import {
     activeInstance,
     defaultChat,
     releaseFromForeground,
+    resetForegroundConversations,
     setActiveConversation,
     startNewForeground,
 } from "@/lib/chat/foreground";
 import type { ChatInstance } from "@/lib/chat/instance";
-import { deleteConversation as deleteConversationPayload } from "@/lib/storage/persistence";
-import { removeMeta } from "@/lib/stores/conversations";
+import { resetPaneConversations } from "@/lib/chat/panes";
+import { liveChatInstances } from "@/lib/chat/registry";
+import { withoutPersistence } from "@/lib/storage/gate";
+import {
+    clearStorage,
+    deleteConversation as deleteConversationPayload,
+    reconcileConversations,
+} from "@/lib/storage/persistence";
+import { conversationsStore, removeMeta } from "@/lib/stores/conversations";
 import { refreshStorage } from "@/lib/stores/storage";
 
 // The default chat instance is re-exported for the historic import sites.
@@ -80,8 +88,82 @@ export async function openConversationAtNode(
  * @param id - Conversation id
  */
 export async function deleteConversationById(id: string): Promise<void> {
-    removeMeta(id);
-    releaseFromForeground(id);
+    for (const instance of liveChatInstances()) {
+        if (instance.store.getState().conversationId === id) instance.stopGeneration();
+    }
     await deleteConversationPayload(id);
+    withoutPersistence(() => {
+        releaseFromForeground(id);
+        resetPaneConversations(id);
+    });
+    removeMeta(id);
     void refreshStorage();
+}
+
+export async function clearApplicationStorage(scope: "all" | "conversations"): Promise<void> {
+    await clearStorage(scope, () => {
+        const instances = liveChatInstances();
+        const ids = instances
+            .map((instance) => instance.store.getState().conversationId)
+            .filter((id): id is string => id !== null);
+        for (const instance of instances) instance.stopGeneration();
+        return ids;
+    });
+    withoutPersistence(() => {
+        resetPaneConversations();
+        resetForegroundConversations();
+    });
+    conversationsStore.setState({ index: [], hydrated: true });
+    void refreshStorage();
+    if (scope === "all" && typeof window !== "undefined") {
+        for (const key of ["hyoai:boot:skin", "hyoai:boot:locale"]) {
+            try {
+                window.localStorage.removeItem(key);
+            } catch {}
+        }
+        window.location.reload();
+    }
+}
+
+/** Returns whether a local commit raced the snapshot and needs another pass. */
+export async function refreshStoredConversations(): Promise<boolean> {
+    const result = await reconcileConversations(() => {
+        const live = liveChatInstances();
+        return {
+            liveIds: new Set(
+                live
+                    .map((i) => i.store.getState().conversationId)
+                    .filter((id): id is string => id !== null),
+            ),
+            busyIds: new Set(
+                live
+                    .filter((i) => i.isStorageBusy())
+                    .map((i) => i.store.getState().conversationId)
+                    .filter((id): id is string => id !== null),
+            ),
+        };
+    });
+    if (!result) return false;
+    if (result.retry && result.blocked) return true;
+    conversationsStore.setState({ index: result.index, hydrated: true });
+    if (result.blocked) return result.retry;
+    if (result.resetConversations)
+        withoutPersistence(() => {
+            resetPaneConversations();
+            resetForegroundConversations();
+        });
+    else
+        for (const id of result.removed)
+            withoutPersistence(() => {
+                releaseFromForeground(id);
+                resetPaneConversations(id);
+            });
+    await Promise.all(
+        liveChatInstances().map(async (instance) => {
+            const id = instance.store.getState().conversationId;
+            if (id && result.changed.includes(id)) await instance.reloadConversation(id);
+        }),
+    );
+    void refreshStorage();
+    return result.retry;
 }

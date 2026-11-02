@@ -18,44 +18,8 @@ export class StorageQuotaError extends Error {
     }
 }
 
-/**
- * Abstract key/value storage backend used by the persistence layer.
- * Signatures are async even though localStorage is synchronous, so an
- * IndexedDB implementation can replace it without touching call sites.
- */
-export interface StorageAdapter {
-    /**
-     * Read the raw string stored under a key.
-     *
-     * @param key - Storage key to read
-     * @returns Stored value, or null when absent
-     */
-    get(key: string): Promise<string | null>;
-
-    /**
-     * Write a raw string under a key.
-     * Implementations throw StorageQuotaError when the quota is exhausted.
-     *
-     * @param key - Storage key to write
-     * @param value - Raw string value to store
-     */
-    set(key: string, value: string): Promise<void>;
-
-    /**
-     * Delete a key; deleting an absent key is a no-op.
-     *
-     * @param key - Storage key to remove
-     */
-    remove(key: string): Promise<void>;
-
-    /**
-     * List all stored keys starting with a prefix.
-     *
-     * @param prefix - Key prefix to match
-     * @returns Matching keys, in backend iteration order
-     */
-    keys(prefix: string): Promise<string[]>;
-}
+/** Formal writes require epoch context and return transaction receipts. */
+export type { IndexedDBStorageAdapter as StorageAdapter } from "@/lib/storage/indexeddbAdapter";
 
 /**
  * Reversible string transform applied between the persistence layer and the

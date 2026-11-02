@@ -1,7 +1,6 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useTheme } from "next-themes";
 
 import { SettingsTree } from "@/components/settings/fields/SettingsTree";
 import { ToggleField } from "@/components/settings/fields/ToggleField";
@@ -13,6 +12,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import { useTheme } from "@/hooks/useAppTheme";
 import { useIsCoarsePointer, useIsMobile, useIsNarrow } from "@/hooks/useMediaQuery";
 import { useStore } from "@/hooks/useStore";
 import { localeStore, setLocale } from "@/lib/stores/locale";

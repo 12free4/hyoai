@@ -1,4 +1,4 @@
-import { loadJson, scheduleJson } from "@/lib/storage/persistence";
+import { loadJson, stageConversationMeta } from "@/lib/storage/persistence";
 import { createStore } from "@/lib/store";
 import type { ConversationMeta } from "@/types/chat";
 import { STORAGE_KEYS } from "@/types/storage";
@@ -25,10 +25,6 @@ export async function hydrateConversations(): Promise<void> {
     });
 }
 
-function persistIndex(): void {
-    scheduleJson(STORAGE_KEYS.conversationsIndex, () => conversationsStore.getState().index);
-}
-
 /**
  * Sort metas for display: pinned first, then most recently modified.
  *
@@ -47,7 +43,7 @@ export function sortMetas(index: ConversationMeta[]): ConversationMeta[] {
  *
  * @param meta - Meta to upsert
  */
-export function upsertMeta(meta: ConversationMeta): void {
+export function upsertMeta(meta: ConversationMeta, persist = true): void {
     conversationsStore.setState((state) => {
         const exists = state.index.some((entry) => entry.id === meta.id);
         return {
@@ -56,7 +52,7 @@ export function upsertMeta(meta: ConversationMeta): void {
                 : [...state.index, meta],
         };
     });
-    persistIndex();
+    if (persist) stageConversationMeta(meta);
 }
 
 /**
@@ -69,11 +65,12 @@ export function patchMeta(id: string, patch: Partial<ConversationMeta>): void {
     conversationsStore.setState((state) => ({
         index: state.index.map((entry) => (entry.id === id ? { ...entry, ...patch } : entry)),
     }));
-    persistIndex();
+    const meta = getMeta(id);
+    if (meta) stageConversationMeta(meta);
 }
 
 /**
- * Remove a conversation meta from the index and persist it.
+ * Remove a conversation meta from memory after the atomic database deletion.
  *
  * @param id - Conversation id
  */
@@ -81,7 +78,6 @@ export function removeMeta(id: string): void {
     conversationsStore.setState((state) => ({
         index: state.index.filter((entry) => entry.id !== id),
     }));
-    persistIndex();
 }
 
 /**

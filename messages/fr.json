@@ -343,10 +343,18 @@
             "storageNearFull": "presque plein, exporte ou supprime des conversations",
             "storageWarning": "Le stockage local est plein à {percent} % — exporte ou supprime des conversations pour libérer de l'espace.",
             "storageManage": "Ouvrir les réglages de stockage",
-            "storageHint": "Les conversations sont compressées dans le localStorage du navigateur.",
+            "storageHint": "Les conversations sont compressées dans IndexedDB. Les tailles individuelles estiment les chaînes du contenu compressé, hors index partagé.",
             "clearAll": "Tout effacer",
             "clearAllTitle": "Effacer toutes les données",
-            "clearAllDescription": "Conversations et paramètres seront définitivement supprimés de ce navigateur."
+            "clearAllDescription": "Conversations et paramètres seront définitivement supprimés de ce navigateur.",
+            "storagePending": "Les statistiques de stockage sont temporairement indisponibles.",
+            "importPartial": "Importation interrompue après {count} conversations : {error}",
+            "clearConversations": "Effacer les conversations",
+            "clearConversationsTitle": "Effacer toutes les conversations ?",
+            "clearConversationsDescription": "Toutes les conversations seront supprimées et la génération arrêtée. Les réglages, la langue et le thème seront conservés.",
+            "clearSuccess": "Données effacées.",
+            "clearFailed": "Impossible d’effacer les données : {error}",
+            "logicalUsage": "Données logiques HYOAI : {size} (chaînes UTF-16, données compressées comprises). La barre estime le stockage de toute cette origine ; la taille disque peut différer."
         },
         "config": {
             "description": "Modifie ici la configuration sans toucher au fichier config.json déployé. Les changements sont enregistrés dans ce navigateur et appliqués immédiatement ; l'aperçu en bas peut être copié pour le reporter dans le vrai config.json.",
@@ -484,5 +492,18 @@
         "partialAnalysisHeader": "--- Analyse de la partie {index} ---",
         "synthesisUserTemplate": "Demande de l'utilisateur :\n{demand}\n\nAnalyses partielles :\n\n{body}",
         "quoteReply": "{content}\n\nEn réponse à ce passage :\n\n{quoted}"
+    },
+    "storage": {
+        "loading": "Chargement des données…",
+        "bootFailed": "Impossible de charger les données.",
+        "retry": "Réessayer",
+        "conflict": "Cette conversation a changé dans un autre onglet.",
+        "saveFailed": "Impossible d’enregistrer les modifications.",
+        "unsaved": "Vos modifications locales restent en mémoire.",
+        "reloadWarning": "Le rechargement abandonne toutes les modifications non enregistrées de cet onglet. Enregistrez une copie locale de chaque conversation concernée avant de recharger.",
+        "copyReload": "Enregistrer une copie locale",
+        "reload": "Abandonner et recharger",
+        "syncFailed": "Impossible de synchroniser les changements. Revenez dans cet onglet pour réessayer.",
+        "copySaved": "Copie locale enregistrée. Traitez les autres modifications avant de recharger."
     }
 }

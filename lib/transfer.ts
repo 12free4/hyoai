@@ -1,10 +1,15 @@
+import { IndexedDBStorageError } from "@/lib/storage/indexeddbAdapter";
 import { buildExport, remapConversationIds } from "@/lib/storage/io";
 import { toLlamaCppExport } from "@/lib/storage/llamacpp";
-import { readConversation, writeConversationNow } from "@/lib/storage/persistence";
-import { conversationsStore, getMeta, upsertMeta } from "@/lib/stores/conversations";
+import {
+    createImportedConversation,
+    flushAll,
+    readConversationForEditor,
+} from "@/lib/storage/persistence";
+import { conversationsStore, upsertMeta } from "@/lib/stores/conversations";
 import { settingsStore, updateSettings } from "@/lib/stores/settings";
 import { refreshStorage } from "@/lib/stores/storage";
-import type { Conversation, ConversationData } from "@/types/chat";
+import type { Conversation } from "@/types/chat";
 import type { ExportFile } from "@/types/storage";
 
 /**
@@ -15,10 +20,8 @@ import type { ExportFile } from "@/types/storage";
  * @returns null when the meta or payload is missing
  */
 async function loadFullConversation(id: string): Promise<Conversation | null> {
-    const meta = getMeta(id);
-    const data = (await readConversation(id)) as ConversationData | null;
-    if (!meta || !data) return null;
-    return { ...meta, ...data, id };
+    const read = await readConversationForEditor(id);
+    return read ? { ...read.metadata, ...read.data, id } : null;
 }
 
 /**
@@ -27,6 +30,7 @@ async function loadFullConversation(id: string): Promise<Conversation | null> {
  * @param id - Conversation id
  */
 export async function exportOneConversation(id: string): Promise<ExportFile | null> {
+    await flushAll();
     const conversation = await loadFullConversation(id);
     if (!conversation) return null;
     return buildExport({ conversations: [conversation] });
@@ -38,6 +42,7 @@ export async function exportOneConversation(id: string): Promise<ExportFile | nu
  * @param ids - Conversation ids to load
  */
 async function loadFullConversations(ids: string[]): Promise<Conversation[]> {
+    await flushAll();
     const conversations: Conversation[] = [];
     for (const id of ids) {
         const conversation = await loadFullConversation(id);
@@ -94,32 +99,56 @@ export async function applyImport(
     file: ExportFile,
 ): Promise<{ conversations: number; settings: boolean }> {
     let importedConversations = 0;
-    if (file.conversations) {
-        const existingIds = new Set(conversationsStore.getState().index.map((m) => m.id));
-        for (const incoming of file.conversations) {
-            const conversation = remapConversationIds(incoming, existingIds);
-            existingIds.add(conversation.id);
-            const { rootId, currNode, nodes, ...meta } = conversation;
-            await writeConversationNow(conversation.id, {
-                id: conversation.id,
-                rootId,
-                currNode,
-                nodes,
-            });
-            upsertMeta(meta);
-            importedConversations += 1;
+    try {
+        if (file.conversations) {
+            const existingIds = new Set(conversationsStore.getState().index.map((m) => m.id));
+            for (const incoming of file.conversations) {
+                let conversation = remapConversationIds(incoming, existingIds);
+                let saved = false;
+                for (let attempt = 0; attempt < 3; attempt++) {
+                    const { rootId, currNode, nodes, compaction, ...meta } = conversation;
+                    try {
+                        await createImportedConversation(meta, {
+                            id: conversation.id,
+                            rootId,
+                            currNode,
+                            nodes,
+                            compaction,
+                        });
+                        upsertMeta(meta, false);
+                        existingIds.add(conversation.id);
+                        importedConversations++;
+                        saved = true;
+                        break;
+                    } catch (error) {
+                        if (
+                            !(error instanceof IndexedDBStorageError) ||
+                            error.code !== "ID_COLLISION"
+                        )
+                            throw error;
+                        existingIds.add(conversation.id);
+                        conversation = remapConversationIds(conversation, existingIds);
+                    }
+                }
+                if (!saved) throw new Error("Could not allocate a conversation id");
+            }
         }
-    }
 
-    if (file.settings) {
-        updateSettings(file.settings);
-    }
+        if (file.settings) {
+            updateSettings(file.settings);
+        }
 
-    void refreshStorage();
-    return {
-        conversations: importedConversations,
-        settings: Boolean(file.settings),
-    };
+        await flushAll();
+        void refreshStorage();
+        return {
+            conversations: importedConversations,
+            settings: Boolean(file.settings),
+        };
+    } catch (error) {
+        throw Object.assign(error instanceof Error ? error : new Error(String(error)), {
+            importedConversations,
+        });
+    }
 }
 
 /**

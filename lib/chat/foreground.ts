@@ -167,7 +167,14 @@ export async function setActiveConversation(id: string): Promise<boolean> {
     if (!instance) {
         instance = new ChatInstance(undefined, { followGlobalModel: true });
         track(instance);
-        const ok = await instance.openConversation(id);
+        let ok: boolean;
+        try {
+            ok = await instance.openConversation(id);
+        } catch (error) {
+            evict(instance);
+            if (activeChatStore.getState().instance === previous) previous.setActive(true);
+            throw error;
+        }
         if (!ok) {
             evict(instance);
             if (activeChatStore.getState().instance === previous) {
@@ -221,3 +228,10 @@ export function releaseFromForeground(id: string): void {
 
 // Track the seed instance so it registers and evicts like any other.
 track(defaultChat);
+
+/** Invalidate outstanding opens before replacing every foreground owner. */
+export function resetForegroundConversations(): void {
+    requestToken++;
+    for (const instance of new Set([...instances.values(), activeInstance()])) evict(instance);
+    startNewForeground();
+}

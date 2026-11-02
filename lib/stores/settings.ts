@@ -1,4 +1,3 @@
-import { localStorageAdapter } from "@/lib/storage/local";
 import { loadJson, scheduleJson } from "@/lib/storage/persistence";
 import { createStore } from "@/lib/store";
 import { type AppSettings, DEFAULT_SETTINGS, type SkinId } from "@/types/settings";
@@ -83,8 +82,7 @@ export function setEffort(effort: string): void {
 }
 
 /**
- * Switch the visual skin: updates settings, the html attribute and the raw
- * lc:skin mirror key read by the pre-paint boot script.
+ * Switch the skin in settings and the document. Its boot cache follows successful persistence.
  *
  * @param skin - Skin to activate
  */
@@ -93,5 +91,4 @@ export function setSkin(skin: SkinId): void {
     if (typeof document !== "undefined") {
         document.documentElement.dataset.skin = skin;
     }
-    void localStorageAdapter.set(STORAGE_KEYS.skin, skin);
 }

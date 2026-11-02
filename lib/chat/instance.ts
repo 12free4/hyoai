@@ -5,6 +5,7 @@ import { measureCharsPerToken } from "@/lib/api/tokenize";
 import * as lifecycle from "@/lib/chat/lifecycle";
 import * as modelOps from "@/lib/chat/model";
 import type { ChatModelSelection } from "@/lib/chat/model";
+import { registerChatInstance } from "@/lib/chat/registry";
 import {
     buildChapterMessages,
     buildSynthesisMessages,
@@ -123,6 +124,17 @@ export class ChatInstance {
     } | null = null;
     private relaunchStrategy: ChunkingStrategy | null = null;
     private rechunkAttempts = 0;
+    private readonly unregisterStorage: () => void;
+
+    isStorageBusy = (): boolean => {
+        const state = this.store.getState();
+        return (
+            this.chunking ||
+            state.streaming.status !== "idle" ||
+            state.compacting ||
+            state.chunking !== null
+        );
+    };
 
     /**
      * Build an instance over a state store (a fresh one by default).
@@ -135,6 +147,7 @@ export class ChatInstance {
         this.syncUrl = options.syncUrl ?? false;
         this.followGlobalModel = options.followGlobalModel ?? false;
         this.controlsGlobalModel = this.followGlobalModel;
+        this.unregisterStorage = registerChatInstance(this);
     }
 
     /**
@@ -259,7 +272,8 @@ export class ChatInstance {
     private persistActiveConversation = (): void => {
         const conversationId = this.store.getState().conversationId;
         if (!conversationId) return;
-        scheduleConversationWrite(conversationId, this.snapshotData);
+        const snapshot = this.snapshotData();
+        scheduleConversationWrite(conversationId, () => snapshot);
     };
 
     /**
@@ -550,9 +564,9 @@ export class ChatInstance {
 
         const conversationId = this.store.getState().conversationId;
         if (conversationId) {
+            patchMeta(conversationId, { lastModified: Date.now() });
             const data = this.snapshotData();
             if (data) await writeConversationNow(conversationId, data);
-            patchMeta(conversationId, { lastModified: Date.now() });
         }
         void refreshStorage();
     };
@@ -1563,8 +1577,10 @@ export class ChatInstance {
      *
      * @param prompt - System message text; blank clears the override
      */
-    setConversationSystemPrompt = (prompt: string): void =>
+    setConversationSystemPrompt = (prompt: string): void => {
         lifecycle.setConversationSystemPrompt(this.lifecycleContext(), prompt);
+        this.persistActiveConversation();
+    };
 
     /**
      * Move to the previous or next sibling branch of a message and descend to
@@ -1658,6 +1674,8 @@ export class ChatInstance {
 
     // Tear down the instance, aborting any in-flight generation or pipeline.
     dispose = (): void => {
+        this.unregisterStorage();
+        lifecycle.invalidateConversationReads(this.lifecycleContext());
         this.chunkAbort = true;
         this.stopGeneration();
     };

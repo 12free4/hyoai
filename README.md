@@ -6,7 +6,7 @@
 HYOAI is a 100% static front-end: no backend of its own, nothing to deploy or
 secure. The browser talks **directly** to your inference server's API
 (llama.cpp, vLLM, Ollama, or any OpenAI-compatible endpoint, including public
-ones). Conversations never leave the browser — they live in `localStorage`
+ones). Conversations never leave the browser — they live in `IndexedDB`
 (compressed). Drop the build anywhere static files are served: an object store,
 a CDN, or right next to your inference server.
 
@@ -175,7 +175,7 @@ application loads a `config.json` file served next to it (in dev:
 `public/config.json`; in prod: dropped at the site root, editable without a
 rebuild). Each entry describes a model and the endpoint serving it. The in-app
 **Config** tab (Settings) edits the same fields as local overrides, stored in
-`localStorage` on top of the deployed file and revertable from the Reset dialog.
+`IndexedDB` on top of the deployed file and revertable from the Reset dialog.
 
 ![The Config tab in Settings, editing a model entry](public/images/config.png)
 
@@ -210,7 +210,7 @@ An optional `headers` object adds custom request headers to every call to the
 endpoint (merged after the `apiKey` bearer) — use it for provider opt-ins such
 as Anthropic's `anthropic-dangerous-direct-browser-access`.
 
-Only the active choice (entry and picked model) is remembered in localStorage;
+Only the active choice (entry and picked model) is remembered in IndexedDB;
 the file remains the source of truth for the list. Discovered lists refresh at
 startup and whenever the model selector opens, and `runtimeProps` endpoints are
 also probed through `GET /props` for their context size, modalities (image and
@@ -363,7 +363,7 @@ Other good projects, grouped by architecture:
 - next-themes (light/dark/system) + two switchable skins (`soft`, `flat`)
 - next-intl (FR/EN, no routing)
 - react-markdown + remark-gfm + rehype-highlight (Markdown and code rendering)
-- lz-string (conversation compression in localStorage)
+- lz-string (conversation compression in IndexedDB)
 
 ## Structure
 
@@ -373,7 +373,7 @@ components/     chat/ (view, message, composer, dialogs), settings/ (tabs, field
                 editors, dialogs), layout/ (shells, header, sidebar), compare/,
                 markdown/, common/ (cross-domain), ui/ (shadcn)
 hooks/          useStore (useSyncExternalStore + selectors), useActiveChat, useConversations
-lib/            api/ (SSE, params mapping), storage/ (compressed localStorage, quota),
+lib/            api/ (SSE, params mapping), storage/ (compressed IndexedDB, quota),
                 stores/ (settings, models, conversations, chat), messageTree, chatActions
 messages/       next-intl catalogs fr.json / en.json
 docs/           embed.md (widget parameters, postMessage bridge)
@@ -383,7 +383,7 @@ types/          shared types (chat, server, settings, api, storage)
 
 ## Features
 
-- Local conversations: lightweight index + one localStorage key per
+- Local conversations: lightweight index + one IndexedDB record per
   conversation, debounced writes while streaming, usage gauge and JSON
   export/import
 
@@ -445,3 +445,5 @@ types/          shared types (chat, server, settings, api, storage)
 
 Licensed under the [Apache License 2.0](LICENSE). Copyright 2026 Zenetys — see
 [NOTICE](NOTICE).
+
+Storage details, boot cache policy, and validation limits are documented in [docs/storage.md](docs/storage.md).

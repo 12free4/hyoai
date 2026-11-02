@@ -1,4 +1,4 @@
-import { localStorageAdapter } from "@/lib/storage/local";
+import { loadRaw, scheduleRaw } from "@/lib/storage/persistence";
 import { createStore } from "@/lib/store";
 import { isLocale, type Locale, LOCALES } from "@/types/settings";
 import { STORAGE_KEYS } from "@/types/storage";
@@ -6,7 +6,7 @@ import { STORAGE_KEYS } from "@/types/storage";
 // First declared locale, used as the fallback when nothing else matches.
 const FALLBACK_LOCALE: Locale = LOCALES[0].id;
 
-// UI locale, persisted to lc:locale as a raw string by setLocale.
+// UI locale, persisted to locale as a raw string by setLocale.
 interface LocaleState {
     locale: Locale;
 }
@@ -30,7 +30,7 @@ function asLocale(value: string | null | undefined): Locale | null {
 export async function hydrateLocale(): Promise<void> {
     if (typeof document === "undefined") return;
 
-    const stored = asLocale(await localStorageAdapter.get(STORAGE_KEYS.locale));
+    const stored = asLocale(await loadRaw(STORAGE_KEYS.locale));
     const browser = asLocale((navigator.language || "").slice(0, 2));
     const locale = stored ?? browser ?? FALLBACK_LOCALE;
 
@@ -48,5 +48,5 @@ export function setLocale(locale: Locale): void {
     if (typeof document !== "undefined") {
         document.documentElement.lang = locale;
     }
-    void localStorageAdapter.set(STORAGE_KEYS.locale, locale);
+    scheduleRaw(STORAGE_KEYS.locale, () => localeStore.getState().locale);
 }

@@ -56,6 +56,9 @@ const conversationSchema = z.object({
     modelId: z.string().optional(),
     model: z.string().optional(),
     systemPrompt: z.string().optional(),
+    compaction: z
+        .object({ summary: z.string(), anchorId: z.string(), createdAt: z.number() })
+        .optional(),
     rootId: z.string(),
     currNode: z.string(),
     nodes: z.record(z.string(), messageNodeSchema),
@@ -206,5 +209,8 @@ export function remapConversationIds(
         rootId: mapId(conversation.rootId),
         currNode: mapId(conversation.currNode),
         nodes,
+        compaction: conversation.compaction
+            ? { ...conversation.compaction, anchorId: mapId(conversation.compaction.anchorId) }
+            : undefined,
     };
 }

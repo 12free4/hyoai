@@ -66,6 +66,7 @@ export interface ContentMatch {
 const index = new Map<string, IndexedConversation>();
 // Ids whose cached entry is stale and must be re-read before the next search.
 const staleIds = new Set<string>();
+const changeVersions = new Map<string, number>();
 let subscribed = false;
 
 /**
@@ -78,6 +79,7 @@ function ensureSubscribed(): void {
     }
     subscribed = true;
     onConversationChange((id, removed) => {
+        changeVersions.set(id, (changeVersions.get(id) ?? 0) + 1);
         if (removed) {
             index.delete(id);
             staleIds.delete(id);
@@ -152,7 +154,9 @@ async function refreshIndex(): Promise<void> {
         if (index.has(id) && !staleIds.has(id)) {
             continue;
         }
+        const version = changeVersions.get(id);
         const data = (await readConversation(id)) as ConversationData | null;
+        if (version !== changeVersions.get(id)) continue;
         if (data) {
             index.set(id, indexConversation(id, data));
         } else {

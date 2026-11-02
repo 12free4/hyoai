@@ -343,10 +343,18 @@
             "storageNearFull": "几乎已满，请导出或删除对话",
             "storageWarning": "本地存储已使用 {percent}% — 请导出或删除对话以释放空间。",
             "storageManage": "打开存储设置",
-            "storageHint": "对话会压缩后保存在浏览器的 localStorage 中。",
+            "storageHint": "对话压缩后保存在 IndexedDB 中。单对话数字估算压缩正文的逻辑大小，不包含共享索引开销。",
             "clearAll": "清除全部",
             "clearAllTitle": "清除所有数据",
-            "clearAllDescription": "对话和设置将从此浏览器中永久删除。"
+            "clearAllDescription": "对话和设置将从此浏览器中永久删除。",
+            "storagePending": "存储空间统计暂不可用。",
+            "importPartial": "导入已停止，已保存 {count} 个对话：{error}",
+            "clearConversations": "清空对话",
+            "clearConversationsTitle": "清空所有对话？",
+            "clearConversationsDescription": "将删除所有对话并停止生成，保留设置、语言和主题。",
+            "clearSuccess": "数据已清空。",
+            "clearFailed": "无法清空数据：{error}",
+            "logicalUsage": "HYOAI 逻辑数据：{size}（UTF-16 字符串，包含压缩记录）。进度条估算整个 Origin 的占用；实际磁盘占用可能不同。"
         },
         "config": {
             "description": "在这里编辑配置，无需修改已部署的 config.json 文件。更改会保存在此浏览器中并立即生效；下方预览可复制到真实的 config.json 中。",
@@ -484,5 +492,18 @@
         "partialAnalysisHeader": "--- 第 {index} 部分的分析 ---",
         "synthesisUserTemplate": "用户请求：\n{demand}\n\n各部分分析：\n\n{body}",
         "quoteReply": "{content}\n\n针对以下段落作出回复：\n\n{quoted}"
+    },
+    "storage": {
+        "loading": "正在加载已保存数据…",
+        "bootFailed": "无法加载已保存数据。",
+        "retry": "重试",
+        "conflict": "此对话已在其他标签页发生变化。",
+        "saveFailed": "无法保存更改。",
+        "unsaved": "本地更改仍保留在内存中。",
+        "reloadWarning": "重新加载会丢弃此标签页所有未保存更改。请先为每个需要保留的对话保存本地内容副本，再选择重新加载。",
+        "copyReload": "保存本地内容副本",
+        "reload": "丢弃未保存更改并重新加载",
+        "syncFailed": "无法刷新其他标签页的更改。重新切回此标签页可重试。",
+        "copySaved": "本地内容快照已保存。请处理剩余更改后再重新加载。"
     }
 }

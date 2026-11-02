@@ -5,7 +5,7 @@ import type { StorageUsage } from "@/types/storage";
 // Fraction of the quota above which the user gets a one-shot warning.
 export const STORAGE_WARN_RATIO = 0.9;
 
-// Cached localStorage usage plus a latch so the near-full warning fires once per crossing.
+// Cached browser storage usage plus a latch so the near-full warning fires once per crossing.
 interface StorageState {
     usage: StorageUsage | null;
     warned: boolean;
@@ -24,11 +24,18 @@ export function usageRatio(usage: StorageUsage | null): number {
 }
 
 /**
- * Re-estimate localStorage usage into the store. Clears the warning latch
+ * Re-estimate browser storage usage into the store. Clears the warning latch
  * once usage drops back under the threshold so it can fire again later.
  */
 export async function refreshStorage(): Promise<void> {
-    const usage = await estimateUsage();
+    let usage: StorageUsage;
+    try {
+        usage = await estimateUsage();
+    } catch (error) {
+        console.warn("hyoai: storage estimate failed", error);
+        storageStore.setState({ usage: null });
+        return;
+    }
     storageStore.setState((state) => ({
         usage,
         warned: usageRatio(usage) >= STORAGE_WARN_RATIO ? state.warned : false,

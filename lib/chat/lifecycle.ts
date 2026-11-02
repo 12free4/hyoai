@@ -1,19 +1,36 @@
 import type { ChatModelSelection } from "@/lib/chat/model";
 import { createConversation } from "@/lib/conversation";
 import { newId } from "@/lib/id";
-import { flushAll, readConversation, writeConversationNow } from "@/lib/storage/persistence";
+import {
+    acceptConversationRead,
+    flushAll,
+    isConversationDirty,
+    readConversationForEditor,
+    scheduleConversationWrite,
+    writeConversationNow,
+} from "@/lib/storage/persistence";
 import type { Store } from "@/lib/store";
 import { type ChatState, IDLE_STREAMING } from "@/lib/stores/chat";
 import { getMeta, patchMeta, upsertMeta } from "@/lib/stores/conversations";
 import { modelsStore, setActiveModel } from "@/lib/stores/models";
 import { cloneBranch } from "@/lib/tree";
-import type { ConversationData } from "@/types/chat";
 
 /**
  * What conversation lifecycle operations need from the owning ChatInstance:
  * its stores, the foreground flags and the side effects (URL sync, generation
  * stop) that only the instance can perform.
  */
+const readTokens = new WeakMap<object, number>();
+function nextRead(ctx: LifecycleContext): number {
+    const token = (readTokens.get(ctx.store) ?? 0) + 1;
+    readTokens.set(ctx.store, token);
+    return token;
+}
+
+export function invalidateConversationReads(ctx: LifecycleContext): void {
+    nextRead(ctx);
+}
+
 export interface LifecycleContext {
     store: Store<ChatState>;
     selection: Store<ChatModelSelection>;
@@ -91,6 +108,14 @@ export function setConversationSystemPrompt(ctx: LifecycleContext, prompt: strin
             systemPrompt: value,
         });
         ctx.syncUrlMaybe(conversationId);
+        const state = ctx.store.getState();
+        const data = {
+            id: conversationId,
+            rootId: state.rootId,
+            currNode: state.currNode,
+            nodes: state.nodes,
+        };
+        scheduleConversationWrite(conversationId, () => data);
     }
 }
 
@@ -100,6 +125,7 @@ export function setConversationSystemPrompt(ctx: LifecycleContext, prompt: strin
  * @param ctx - Owning instance context
  */
 export function startNewConversation(ctx: LifecycleContext): void {
+    nextRead(ctx);
     if (ctx.isChunking() || ctx.store.getState().streaming.status !== "idle") ctx.stopGeneration();
     const { meta, data } = createConversation(Date.now());
     ctx.store.setState({
@@ -127,9 +153,19 @@ export function startNewConversation(ctx: LifecycleContext): void {
 export async function openConversation(ctx: LifecycleContext, id: string): Promise<boolean> {
     if (ctx.store.getState().conversationId === id) return true;
     if (ctx.isChunking() || ctx.store.getState().streaming.status !== "idle") ctx.stopGeneration();
+    const token = nextRead(ctx);
+    const before = ctx.store.getState();
     await flushAll();
-
-    const raw = (await readConversation(id)) as ConversationData | null;
+    const read = await readConversationForEditor(id);
+    if (
+        token !== readTokens.get(ctx.store) ||
+        before !== ctx.store.getState() ||
+        !read ||
+        !acceptConversationRead(id, read)
+    )
+        return false;
+    const raw = read.data;
+    upsertMeta(read.metadata, false);
     if (!raw || typeof raw !== "object" || !raw.rootId || !raw.nodes) return false;
 
     ctx.store.setState({
@@ -173,7 +209,18 @@ export async function reloadConversation(ctx: LifecycleContext, id: string): Pro
     if (state.conversationId !== id) return;
     if (ctx.isChunking() || state.streaming.status !== "idle" || state.compacting) return;
 
-    const raw = (await readConversation(id)) as ConversationData | null;
+    if (isConversationDirty(id)) return;
+    const token = nextRead(ctx);
+    const read = await readConversationForEditor(id);
+    if (
+        token !== readTokens.get(ctx.store) ||
+        state !== ctx.store.getState() ||
+        !read ||
+        !acceptConversationRead(id, read)
+    )
+        return;
+    const raw = read.data;
+    upsertMeta(read.metadata, false);
     if (!raw || typeof raw !== "object" || !raw.rootId || !raw.nodes) return;
 
     ctx.store.setState({

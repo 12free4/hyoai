@@ -1,31 +1,31 @@
 import type { Conversation } from "@/types/chat";
 import type { AppSettings } from "@/types/settings";
 
-// Centralized localStorage key layout, all prefixed with "lc:".
+// Keys in the independent IndexedDB database.
 export const STORAGE_KEYS = {
-    meta: "lc:meta",
-    locale: "lc:locale",
-    skin: "lc:skin",
-    settings: "lc:settings",
-    models: "lc:models",
-    configOverride: "lc:config",
-    compare: "lc:compare",
-    conversationsIndex: "lc:convs",
-    conversation: (id: string) => `lc:conv:${id}`,
-    conversationPrefix: "lc:conv:",
+    meta: "meta",
+    theme: "theme",
+    locale: "locale",
+    settings: "settings",
+    models: "models",
+    configOverride: "config",
+    compare: "compare",
+    conversationsIndex: "conversations:index",
+    conversation: (id: string) => `conversation:${id}`,
+    conversationPrefix: "conversation:",
 } as const;
 
 /**
- * Content of the lc:meta key.
+ * Content of the meta key.
  *
  * @param schemaVersion - Storage schema version, used to drive migrations
  */
 export interface StorageMeta {
-    schemaVersion: number;
+    dataSchemaVersion: number;
 }
 
 /**
- * Content of the lc:models key: the active choice over config.json entries
+ * Content of the models key: the active choice over config.json entries
  * plus the upstream model picked per discovering entry.
  */
 export interface PersistedModelSelection {
@@ -56,7 +56,7 @@ export interface PersistedPane {
 export type BroadcastTarget = "all" | "active";
 
 /**
- * Content of the lc:compare key: the side-by-side layout and its panes.
+ * Content of the compare key: the side-by-side layout and its panes.
  *
  * @param enabled - Whether the side-by-side compare layout is active
  * @param panes - The compare panes, in display order
@@ -95,6 +95,8 @@ export interface ExportFile {
  * @param conversations - Per-conversation byte breakdown
  */
 export interface StorageUsage {
+    /** UTF-16 size of HYOAI keys and stored strings; not physical disk usage. */
+    logicalBytes?: number;
     usedBytes: number;
     quotaBytes: number;
     conversations: { id: string; bytes: number }[];

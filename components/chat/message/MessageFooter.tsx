@@ -132,7 +132,7 @@ function ToggleButton({
  * Footer line of an assistant message: the producing model as a chips badge
  * (opens the model info dialog when it is the active model) and a stats area
  * that toggles between the reading (prompt processing) phase, the generation
- * (token output) phase and the localStorage footprint of the conversation.
+ * (token output) phase and the browser storage footprint of the conversation.
  *
  * @param node - Finished assistant node
  */

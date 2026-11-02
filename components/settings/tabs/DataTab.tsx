@@ -21,12 +21,15 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { useStore } from "@/hooks/useStore";
+import { clearApplicationStorage } from "@/lib/actions";
 import { formatBytes } from "@/lib/format";
+import { canClearStorage } from "@/lib/storage/gate";
 import { buildExport, parseImport } from "@/lib/storage/io";
 import { parseLlamaCppExport } from "@/lib/storage/llamacpp";
-import { localStorageAdapter } from "@/lib/storage/local";
+import { storageOperationStore } from "@/lib/storage/persistence";
 import { conversationsStore } from "@/lib/stores/conversations";
 import { refreshStorage, STORAGE_WARN_RATIO, storageStore, usageRatio } from "@/lib/stores/storage";
+import { uiStore } from "@/lib/stores/ui";
 import { applyImport } from "@/lib/transfer";
 import { cn } from "@/lib/utils";
 import type { ExportFile } from "@/types/storage";
@@ -66,6 +69,9 @@ export function DataTab() {
     const locale = useLocale();
     const [exportOpen, setExportOpen] = useState(false);
     const [importing, setImporting] = useState(false);
+    const [clearDialog, setClearDialog] = useState<"all" | "conversations" | null>(null);
+    const clearing = useStore(storageOperationStore, (s) => s.clearing);
+    const embed = useStore(uiStore, (s) => s.embed);
     const usage = useStore(storageStore, (state) => state.usage);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -84,17 +90,32 @@ export function DataTab() {
             }
             const result = await applyImport(parsed.data);
             toast.success(t("data.importSuccess", { conversations: result.conversations }));
+        } catch (error) {
+            const count = (error as { importedConversations?: number })?.importedConversations ?? 0;
+            toast.error(
+                t("data.importPartial", {
+                    count,
+                    error: error instanceof Error ? error.message : String(error),
+                }),
+            );
         } finally {
             setImporting(false);
         }
     };
 
-    const handleClearAll = async () => {
-        const keys = await localStorageAdapter.keys("lc:");
-        for (const key of keys) {
-            await localStorageAdapter.remove(key);
+    const handleClear = async (scope: "all" | "conversations") => {
+        if (clearing) return;
+        try {
+            await clearApplicationStorage(scope);
+            setClearDialog(null);
+            toast.success(t("data.clearSuccess"));
+        } catch (error) {
+            toast.error(
+                t("data.clearFailed", {
+                    error: error instanceof Error ? error.message : String(error),
+                }),
+            );
         }
-        window.location.reload();
     };
 
     const ratio = usageRatio(usage);
@@ -148,6 +169,13 @@ export function DataTab() {
                 <h3 className="text-sm font-medium">{t("data.storageTitle")}</h3>
                 <Progress value={usedPercent} />
                 {usage && (
+                    <p className="text-xs text-muted-foreground">
+                        {t("data.logicalUsage", {
+                            size: formatBytes(usage.logicalBytes ?? 0, locale),
+                        })}
+                    </p>
+                )}
+                {usage && usage.quotaBytes > 0 && (
                     <p
                         className={cn(
                             "text-xs",
@@ -173,35 +201,76 @@ export function DataTab() {
                         ))}
                     </ul>
                 )}
-                <p className="text-xs text-muted-foreground">{t("data.storageHint")}</p>
+                <p className="text-xs text-muted-foreground">
+                    {t(usage ? "data.storageHint" : "data.storagePending")}
+                </p>
             </section>
             <Separator />
-            <section>
-                <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                        <Button type="button" variant="destructive">
-                            <Trash2 aria-hidden="true" />
-                            {t("data.clearAll")}
-                        </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                        <AlertDialogHeader>
-                            <AlertDialogTitle>{t("data.clearAllTitle")}</AlertDialogTitle>
-                            <AlertDialogDescription>
-                                {t("data.clearAllDescription")}
-                            </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                            <AlertDialogCancel>{tc("cancel")}</AlertDialogCancel>
-                            <AlertDialogAction
-                                variant="destructive"
-                                onClick={() => void handleClearAll()}
-                            >
-                                {tc("delete")}
-                            </AlertDialogAction>
-                        </AlertDialogFooter>
-                    </AlertDialogContent>
-                </AlertDialog>
+            <section className="flex flex-wrap gap-3">
+                {(embed ? (["conversations"] as const) : (["conversations", "all"] as const)).map(
+                    (scope) => (
+                        <AlertDialog
+                            key={scope}
+                            open={clearDialog === scope}
+                            onOpenChange={(open) => {
+                                if (!clearing) setClearDialog(open ? scope : null);
+                            }}
+                        >
+                            <AlertDialogTrigger asChild>
+                                <Button
+                                    type="button"
+                                    variant="destructive"
+                                    disabled={
+                                        Boolean(clearing) || importing || !canClearStorage(scope)
+                                    }
+                                >
+                                    <Trash2 aria-hidden="true" />
+                                    {t(
+                                        scope === "all"
+                                            ? "data.clearAll"
+                                            : "data.clearConversations",
+                                    )}
+                                </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle>
+                                        {t(
+                                            scope === "all"
+                                                ? "data.clearAllTitle"
+                                                : "data.clearConversationsTitle",
+                                        )}
+                                    </AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                        {t(
+                                            scope === "all"
+                                                ? "data.clearAllDescription"
+                                                : "data.clearConversationsDescription",
+                                        )}
+                                    </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel disabled={Boolean(clearing)}>
+                                        {tc("cancel")}
+                                    </AlertDialogCancel>
+                                    <AlertDialogAction
+                                        variant="destructive"
+                                        disabled={Boolean(clearing)}
+                                        onClick={(event) => {
+                                            event.preventDefault();
+                                            void handleClear(scope);
+                                        }}
+                                    >
+                                        {clearing ? (
+                                            <Loader2 className="animate-spin" aria-hidden="true" />
+                                        ) : null}
+                                        {tc("delete")}
+                                    </AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
+                    ),
+                )}
             </section>
         </div>
     );
