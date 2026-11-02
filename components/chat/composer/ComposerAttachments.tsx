@@ -40,6 +40,7 @@ export function AttachmentThumb({ attachment }: { attachment: Attachment }) {
 interface ComposerAttachmentsProps {
     attachments: Attachment[];
     onRemove: (id: string) => void;
+    processingCount?: number;
 }
 
 /**
@@ -49,12 +50,24 @@ interface ComposerAttachmentsProps {
  * @param attachments - Pending attachments
  * @param onRemove - Removes one attachment by id
  */
-export function ComposerAttachments({ attachments, onRemove }: ComposerAttachmentsProps) {
+export function ComposerAttachments({
+    attachments,
+    onRemove,
+    processingCount = 0,
+}: ComposerAttachmentsProps) {
     const t = useTranslations("composer");
-    if (attachments.length === 0) return null;
+    if (attachments.length === 0 && processingCount === 0) return null;
 
     return (
         <div className="mb-2 flex flex-wrap gap-2">
+            {processingCount > 0 && (
+                <span
+                    role="status"
+                    className="inline-flex items-center rounded-lg border border-border bg-card px-2.5 py-2 text-xs text-muted-foreground"
+                >
+                    {t("processingDocument")} ({processingCount})
+                </span>
+            )}
             {attachments.map((attachment) => (
                 <div key={attachment.id} className="relative">
                     {attachment.kind === "image" && attachment.dataUri ? (

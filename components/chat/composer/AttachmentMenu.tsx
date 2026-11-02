@@ -14,7 +14,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { AUDIO_ACCEPT } from "@/lib/files";
+import { AUDIO_ACCEPT, OFFICE_ACCEPT } from "@/lib/files";
 
 interface MenuEntryProps {
     icon: ReactNode;
@@ -52,6 +52,7 @@ interface AttachmentMenuProps {
     onAudioFiles: (files: File[]) => void;
     onTextFiles: (files: File[]) => void;
     onPdfFiles: (files: File[]) => void;
+    onOfficeFiles: (files: File[]) => void;
     onSystemMessage?: () => void;
     onAfterPick?: () => void;
 }
@@ -78,6 +79,7 @@ export function AttachmentMenu({
     onAudioFiles,
     onTextFiles,
     onPdfFiles,
+    onOfficeFiles,
     onSystemMessage,
     onAfterPick,
 }: AttachmentMenuProps) {
@@ -86,6 +88,7 @@ export function AttachmentMenu({
     const audioInputRef = useRef<HTMLInputElement>(null);
     const textInputRef = useRef<HTMLInputElement>(null);
     const pdfInputRef = useRef<HTMLInputElement>(null);
+    const officeInputRef = useRef<HTMLInputElement>(null);
 
     /**
      * Renders a hidden file input for the given type, and calls the provided callback
@@ -121,6 +124,7 @@ export function AttachmentMenu({
             {filePicker(audioInputRef, AUDIO_ACCEPT, onAudioFiles)}
             {filePicker(textInputRef, "", onTextFiles)}
             {filePicker(pdfInputRef, "application/pdf,.pdf", onPdfFiles)}
+            {filePicker(officeInputRef, OFFICE_ACCEPT, onOfficeFiles)}
             <DropdownMenu>
                 <Tooltip>
                     <TooltipTrigger asChild>
@@ -159,6 +163,11 @@ export function AttachmentMenu({
                         icon={<File aria-hidden="true" />}
                         label={t("attachPdf")}
                         onSelect={() => pdfInputRef.current?.click()}
+                    />
+                    <MenuEntry
+                        icon={<FileText aria-hidden="true" />}
+                        label={t("attachOffice")}
+                        onSelect={() => officeInputRef.current?.click()}
                     />
                     {onSystemMessage && (
                         <>

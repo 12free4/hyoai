@@ -1,6 +1,49 @@
 import { newId } from "@/lib/id";
 import type { Attachment } from "@/types/chat";
 
+import { isOfficeDocumentFile } from "./office/parser";
+
+export { isOfficeDocumentFile, readOfficeAttachment } from "./office/parser";
+export { officeErrorMessageKey } from "./office/types";
+
+export const OFFICE_ACCEPT = [
+    ".doc",
+    ".docx",
+    ".docm",
+    ".ppt",
+    ".pps",
+    ".pot",
+    ".pptx",
+    ".pptm",
+    ".ppsx",
+    ".ppsm",
+    ".xls",
+    ".xlsx",
+    ".xlsm",
+    ".xlsb",
+    ".odt",
+    ".ods",
+    ".odp",
+    ".rtf",
+    "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "application/vnd.ms-word.document.macroenabled.12",
+    "application/vnd.ms-powerpoint",
+    "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+    "application/vnd.ms-powerpoint.presentation.macroenabled.12",
+    "application/vnd.openxmlformats-officedocument.presentationml.slideshow",
+    "application/vnd.ms-powerpoint.slideshow.macroenabled.12",
+    "application/vnd.ms-excel",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "application/vnd.ms-excel.sheet.macroenabled.12",
+    "application/vnd.ms-excel.sheet.binary.macroenabled.12",
+    "application/vnd.oasis.opendocument.text",
+    "application/vnd.oasis.opendocument.spreadsheet",
+    "application/vnd.oasis.opendocument.presentation",
+    "application/rtf",
+    "text/rtf",
+].join(",");
+
 /**
  * Maximum size of a text file that can be read into a text attachment.
  * Maximum size of an audio file that can be read into an inline audio attachment.
@@ -20,6 +63,14 @@ export const AUDIO_ACCEPT = ".mp3,.wav,audio/mpeg,audio/wav,audio/x-wav";
  */
 export function isAudioFile(file: File): boolean {
     return AUDIO_MIME_TYPES.has(file.type) || /\.(mp3|wav)$/i.test(file.name);
+}
+
+export function attachmentFileKind(file: File): "image" | "audio" | "pdf" | "office" | "text" {
+    if (file.type.startsWith("image/")) return "image";
+    if (isAudioFile(file)) return "audio";
+    if (file.type === "application/pdf") return "pdf";
+    if (isOfficeDocumentFile(file)) return "office";
+    return "text";
 }
 
 /**

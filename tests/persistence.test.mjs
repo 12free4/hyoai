@@ -973,3 +973,68 @@ test("storage estimation failure does not leak rejection from fire-and-forget re
         console.warn = original;
     }
 });
+
+test("Office text attachments survive edits, branch changes and export/import", async () => {
+    const h = harness();
+    await h.init();
+    const attachment = {
+        id: "office-1",
+        kind: "text",
+        name: "report.docx",
+        mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        content: "# Report\n\n**Hello**",
+    };
+    const original = {
+        ...body("office"),
+        currNode: "first",
+        nodes: {
+            root: {
+                id: "root",
+                role: "root",
+                content: "",
+                parent: null,
+                children: ["first", "edited"],
+                createdAt: 1,
+            },
+            first: {
+                id: "first",
+                role: "user",
+                content: "original",
+                parent: "root",
+                children: [],
+                attachments: [attachment],
+                createdAt: 1,
+            },
+            edited: {
+                id: "edited",
+                role: "user",
+                content: "edited",
+                parent: "root",
+                children: [],
+                attachments: [],
+                createdAt: 2,
+            },
+        },
+    };
+    await h.p.createImportedConversation(meta("office"), original);
+    const restored = await h.p.readConversation("office");
+    assert.deepEqual(restored.nodes.first.attachments[0], attachment);
+    restored.currNode = "edited";
+    await h.p.writeConversationNow("office", restored);
+    assert.equal((await h.p.readConversation("office")).nodes.edited.attachments.length, 0);
+    restored.currNode = "first";
+    await h.p.writeConversationNow("office", restored);
+    const transfer = h.load("@/lib/transfer");
+    const exported = await transfer.exportOneConversation("office");
+    assert.deepEqual(exported.conversations[0].nodes.first.attachments[0], attachment);
+    const result = await transfer.applyImport(JSON.parse(JSON.stringify(exported)));
+    assert.equal(result.conversations, 1);
+    const ids = [...h.values.keys()].filter(
+        (key) => key.startsWith("conversation:") && key !== "conversation:office",
+    );
+    assert.equal(ids.length, 1);
+    const imported = await h.p.readConversation(ids[0].slice("conversation:".length));
+    const nodes = Object.values(imported.nodes);
+    assert.deepEqual(nodes.find((node) => node.content === "original").attachments[0], attachment);
+    assert.equal(nodes.find((node) => node.content === "edited").attachments.length, 0);
+});

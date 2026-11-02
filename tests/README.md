@@ -8,7 +8,7 @@ Run `npm run check` for TypeScript, ESLint, and formatting.
 
 ## Browser validation still required
 
-`npm run test:storage:browser` runs the existing native IndexedDB smoke harness. Browser startup/debugging is unavailable in the current execution environment; this suite has not been counted as passing. The smoke harness does not replace the following application-level checks.
+`npm run test:storage:browser` runs the native IndexedDB smoke harness, including Office attachment restoration after page reload. It has passed in Chrome in this environment. The smoke harness does not replace the following application-level checks.
 
 Use disposable data in an isolated browser profile, with two same-origin application tabs:
 

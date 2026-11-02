@@ -34,10 +34,21 @@ async function run() {
  assert((await a.keys('ab')).length === 3, 'prefix cursor');
  const meta = id => ({ id, title: id, pinned: false, createdAt: 1, lastModified: 1 });
  const create = (id, context = ctx) => ({ kind: 'create', id, expectedRevision: null, metadata: meta(id), value: id, context });
+ const attachment = {id:'file',kind:'text',name:'report.docx',mimeType:'application/vnd.openxmlformats-officedocument.wordprocessingml.document',content:'# Report\n\n**Hello**'};
+ const tree = {id:'office',rootId:'root',currNode:'first',nodes:{root:{id:'root',role:'root',content:'',parent:null,children:['first','edit'],createdAt:1},first:{id:'first',role:'user',content:'original',parent:'root',children:[],attachments:[attachment],createdAt:1},edit:{id:'edit',role:'user',content:'edited',parent:'root',children:[],attachments:[],createdAt:2}}};
+ await a.commitConversation({kind:'create',id:'office',expectedRevision:null,metadata:meta('office'),value:JSON.stringify(tree),context:ctx});
+ const reopened = new IndexedDBStorage(name);
+ let restored = JSON.parse((await reopened.readSnapshot(['conversation:office'])).values.get('conversation:office'));
+ assert(restored.nodes.first.attachments[0].content === attachment.content && restored.nodes.first.attachments[0].name === attachment.name, 'Office attachment restored after reopening database');
+ restored.currNode = 'edit';
+ await reopened.commitConversation({kind:'update',id:'office',expectedRevision:1,value:JSON.stringify(restored),context:ctx});
+ restored = JSON.parse((await b.readSnapshot(['conversation:office'])).values.get('conversation:office'));
+ assert(restored.currNode === 'edit' && restored.nodes.edit.attachments.length === 0 && restored.nodes.first.attachments[0].content === attachment.content, 'Office attachment and edited branch persisted');
+ reopened.close();
  const [c1,c2] = await Promise.all([a.commitConversation(create('1')), b.commitConversation(create('2'))]);
  assert(c1.revision === 1 && c2.revision === 1, 'create revision');
  const snap = await a.readSnapshot(['conversation:1','conversation-state:1','conversations:index','conversation:1','missing']);
- assert(snap.values.size === 4 && snap.values.get('missing') === null && JSON.parse(snap.values.get('conversations:index')).length === 2, 'snapshot');
+ assert(snap.values.size === 4 && snap.values.get('missing') === null && JSON.parse(snap.values.get('conversations:index')).length === 3, 'snapshot');
  assert(snap.values.get('conversation:1') === '1' && JSON.parse(snap.values.get('conversation-state:1')).revision === 1, 'body and revision');
  await rejects(() => b.commitConversation(create('1')), 'ID_COLLISION');
  const updated = await a.commitConversation({kind:'update',id:'1',expectedRevision:1,value:'new',context:ctx});
@@ -53,6 +64,8 @@ async function run() {
  await rejects(() => b.set('settings','old',ctx), 'STALE_DB_EPOCH');
  await rejects(() => b.commitConversation(create('4',newCtx)), 'STALE_DB_EPOCH');
  assert((await b.readSnapshot(['settings','conversation:3'])).values.get('settings') === null, 'clear all');
+ await a.commitConversation({kind:'create',id:'office',expectedRevision:null,metadata:meta('office'),value:JSON.stringify(tree),context:resetAll.epoch});
+ window.name = name;
  a.close(); b.close(); return 'PASS';
 }
 run();
@@ -87,7 +100,10 @@ async function main() {
         }
         if (!port) throw new Error("Chrome debugging port unavailable");
         const pages = await (await fetch(`http://127.0.0.1:${port}/json`)).json();
-        const ws = new WebSocket(pages[0].webSocketDebuggerUrl);
+        const ws = new WebSocket(
+            pages.find((page) => page.type === "page" && page.url === "about:blank")
+                .webSocketDebuggerUrl,
+        );
         await new Promise((resolve, reject) => {
             ws.onopen = resolve;
             ws.onerror = reject;
@@ -114,12 +130,29 @@ async function main() {
             awaitPromise: true,
             returnByValue: true,
         });
-        ws.close();
         if (result.exceptionDetails)
             throw new Error(
                 result.exceptionDetails.exception?.description || result.exceptionDetails.text,
             );
         if (result.result.value !== "PASS") throw new Error(JSON.stringify(result));
+        await command(3, "Page.reload", {});
+        await new Promise((r) => setTimeout(r, 500));
+        const reload = await command(4, "Runtime.evaluate", {
+            expression: `(async () => {
+                const db = await new Promise((resolve, reject) => { const r = indexedDB.open(window.name); r.onsuccess = () => resolve(r.result); r.onerror = () => reject(r.error); });
+                const raw = await new Promise((resolve, reject) => { const r = db.transaction('kv').objectStore('kv').get('conversation:office'); r.onsuccess = () => resolve(r.result); r.onerror = () => reject(r.error); });
+                db.close();
+                const doc = JSON.parse(raw);
+                return doc.nodes.first.attachments[0].name === 'report.docx' && doc.nodes.first.attachments[0].content === '# Report\\n\\n**Hello**';
+            })()`,
+            awaitPromise: true,
+            returnByValue: true,
+        });
+        ws.close();
+        if (reload.exceptionDetails || reload.result.value !== true)
+            throw new Error(
+                `Office attachment not restored after reload: ${JSON.stringify(reload)}`,
+            );
         console.log("IndexedDB browser smoke tests passed in Chrome.");
     } finally {
         if (proc.exitCode === null && proc.signalCode === null) {

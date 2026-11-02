@@ -155,10 +155,10 @@ export function ComposerShell({
     }, [text]);
 
     const hasInput = Boolean(text.trim()) || att.attachments.length > 0;
-    const canSend = ready && !busy && hasInput;
+    const canSend = ready && !busy && hasInput && !att.isProcessing;
 
     const submit = () => {
-        if (!canSend) return;
+        if (!canSend || att.isProcessingNow()) return;
         const pendingText = text;
         const pendingAttachments = att.attachments;
         setText("");
@@ -249,6 +249,7 @@ export function ComposerShell({
             onAudioFiles={(files) => void att.addAudioFiles(files)}
             onTextFiles={(files) => void att.addTextFiles(files)}
             onPdfFiles={(files) => void att.addPdfFiles(files)}
+            onOfficeFiles={(files) => void att.addOfficeFiles(files)}
             onSystemMessage={onSystemMessage}
             onAfterPick={focusInput}
         />
@@ -280,7 +281,11 @@ export function ComposerShell({
             onDragOver={(event) => event.preventDefault()}
         >
             {banner}
-            <ComposerAttachments attachments={att.attachments} onRemove={att.remove} />
+            <ComposerAttachments
+                attachments={att.attachments}
+                onRemove={att.remove}
+                processingCount={att.processingCount}
+            />
             <div
                 ref={boxRef}
                 className={cn(

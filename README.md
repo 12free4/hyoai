@@ -415,7 +415,17 @@ types/          shared types (chat, server, settings, api, storage)
 - Images: paste/drag-and-drop, resized client-side before sending (OpenAI
   vision format)
 
-    ![Attachment menu: images, audio, text files, PDFs and a system message](public/images/attachements.png)
+    ![Attachment menu](public/images/attachements.png)
+
+- Office documents: Word (`doc`, `docx`, `docm`), PowerPoint (`ppt`, `pps`,
+  `pot`, `pptx`, `pptm`, `ppsx`, `ppsm`), Excel (`xls`, `xlsx`, `xlsm`, `xlsb`),
+  OpenDocument (`odt`, `ods`, `odp`) and `rtf` can be selected, dropped or
+  pasted. AnyDoc WebAssembly extracts Markdown locally in a browser worker; no
+  document is uploaded to a parsing service. Only the extracted text and file
+  metadata are stored in the conversation. Input is limited to 20 MiB and
+  extracted text to 4 MiB (UTF-8); encrypted, damaged or empty documents are
+  rejected. The extracted text is sent to the configured model as a text
+  attachment, so a vision model is not required.
 
 - Math: LaTeX formulas and Unicode math symbols render with KaTeX, including
   `$...$`, `$$...$$`, `\(...\)` and `\[...\]` delimiters

@@ -11,11 +11,13 @@
         "format": "prettier --write . && eslint --fix .",
         "test:storage": "node --test tests/persistence.test.mjs tests/themePatch.test.mjs tests/uuid.test.mjs tests/clipboard.test.mjs",
         "test:storage:browser": "node tests/indexeddbBrowser.mjs",
+        "test:office": "node --test tests/attachments-routing.test.mjs tests/office-compatibility.test.mjs tests/office-formats.test.mjs tests/office-localization.test.mjs tests/office-parser.test.mjs",
         "postinstall": "node scripts/patch-next-themes.mjs",
         "prebuild": "node scripts/patch-next-themes.mjs",
         "predev": "node scripts/patch-next-themes.mjs"
     },
     "dependencies": {
+        "@firecrawl/anydoc-wasm": "^0.2.4",
         "@hookform/resolvers": "^5.4.0",
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",

@@ -1,12 +1,19 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { ClipboardEvent, Dispatch, DragEvent, SetStateAction } from "react";
 import { toast } from "sonner";
 
 import { useStore } from "@/hooks/useStore";
-import { isAudioFile, readAudioAttachment, readTextAttachment } from "@/lib/files";
+import {
+    attachmentFileKind,
+    isOfficeDocumentFile,
+    officeErrorMessageKey,
+    readAudioAttachment,
+    readOfficeAttachment,
+    readTextAttachment,
+} from "@/lib/files";
 import { downscaleImage } from "@/lib/image";
 import { pdfToImageAttachments, pdfToTextAttachment } from "@/lib/pdf";
 import { settingsStore } from "@/lib/stores/settings";
@@ -27,6 +34,10 @@ export interface AttachmentControls {
     addAudioFiles: (files: File[]) => Promise<void>;
     addTextFiles: (files: File[]) => Promise<void>;
     addPdfFiles: (files: File[]) => Promise<void>;
+    addOfficeFiles: (files: File[]) => Promise<void>;
+    processingCount: number;
+    isProcessing: boolean;
+    isProcessingNow: () => boolean;
     handlePaste: (event: ClipboardEvent) => void;
     handleDrop: (event: DragEvent) => void;
 }
@@ -49,6 +60,8 @@ export function useAttachments({
 }: UseAttachmentsOptions): AttachmentControls {
     const t = useTranslations("composer");
     const [attachments, setAttachments] = useState<Attachment[]>(initial);
+    const [processingCount, setProcessingCount] = useState(0);
+    const processingRef = useRef(0);
     const maxDimension = useStore(settingsStore, (state) => state.settings.imageMaxDimension);
     const pdfAsImage = useStore(settingsStore, (state) => state.settings.pdfAsImage);
 
@@ -94,15 +107,37 @@ export function useAttachments({
         }
     };
 
-    // Add text files, reading them into string content.
+    const addOfficeFiles = async (files: File[]) => {
+        if (!files.length) return;
+        processingRef.current += files.length;
+        setProcessingCount((count) => count + files.length);
+        await Promise.all(
+            files.map(async (file) => {
+                try {
+                    push([await readOfficeAttachment(file)]);
+                    toast.success(t("officeProcessed", { name: file.name }));
+                } catch (error) {
+                    toast.error(t(officeErrorMessageKey(error), { name: file.name }));
+                } finally {
+                    processingRef.current -= 1;
+                    setProcessingCount((count) => count - 1);
+                }
+            }),
+        );
+    };
+
+    // The text picker permits all files, including Office documents.
     const addTextFiles = async (files: File[]) => {
-        for (const file of files) {
+        const officeFiles = files.filter(isOfficeDocumentFile);
+        const officeTask = addOfficeFiles(officeFiles);
+        for (const file of files.filter((candidate) => !isOfficeDocumentFile(candidate))) {
             try {
                 push([await readTextAttachment(file)]);
             } catch (error) {
                 toast.error(error instanceof Error ? error.message : String(error));
             }
         }
+        await officeTask;
     };
 
     // Add PDF files, converting them to text or images depending on the settings.
@@ -121,19 +156,21 @@ export function useAttachments({
         }
     };
 
-    // Dispatch a mixed file drop to the right reader by mime type.
+    // Dispatch each file exactly once in the documented priority order.
     const routeFiles = (files: File[]) => {
-        void addImageFiles(files.filter((file) => file.type.startsWith("image/")));
-        void addAudioFiles(files.filter((file) => isAudioFile(file)));
-        void addPdfFiles(files.filter((file) => file.type === "application/pdf"));
-        void addTextFiles(
-            files.filter(
-                (file) =>
-                    !file.type.startsWith("image/") &&
-                    !isAudioFile(file) &&
-                    file.type !== "application/pdf",
-            ),
-        );
+        const groups = {
+            image: [] as File[],
+            audio: [] as File[],
+            pdf: [] as File[],
+            office: [] as File[],
+            text: [] as File[],
+        };
+        for (const file of files) groups[attachmentFileKind(file)].push(file);
+        void addImageFiles(groups.image);
+        void addAudioFiles(groups.audio);
+        void addPdfFiles(groups.pdf);
+        void addOfficeFiles(groups.office);
+        void addTextFiles(groups.text);
     };
 
     // Handle paste events by routing any files in the clipboard to the right reader.
@@ -157,6 +194,10 @@ export function useAttachments({
         addAudioFiles,
         addTextFiles,
         addPdfFiles,
+        addOfficeFiles,
+        processingCount,
+        isProcessing: processingCount > 0,
+        isProcessingNow: () => processingRef.current > 0,
         handlePaste,
         handleDrop,
     };
