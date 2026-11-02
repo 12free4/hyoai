@@ -1,3 +1,4 @@
+import { newId } from "@/lib/id";
 import {
     type CommitConversationInput,
     type CommitReceipt,
@@ -36,7 +37,7 @@ function fail(message: string): never {
     throw new IndexedDBStorageError("DATABASE_ERROR", message);
 }
 function epoch(): string {
-    return crypto.randomUUID();
+    return newId();
 }
 function parseMeta(raw: unknown): DatabaseMeta {
     try {

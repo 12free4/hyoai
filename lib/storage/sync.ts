@@ -1,3 +1,4 @@
+import { newId } from "@/lib/id";
 import { onStorageCommit, type StorageCommit } from "@/lib/storage/events";
 
 const CHANNEL = "hyoai:storage:v1";
@@ -54,7 +55,7 @@ export function createStorageSync(options: {
     onRemoteChange?: () => void;
     channelFactory?: (name: string) => BroadcastChannel;
 }) {
-    const sender = crypto.randomUUID();
+    const sender = newId();
     let sequence = 0,
         ready = false,
         disposed = false,

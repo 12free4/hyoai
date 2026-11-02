@@ -179,7 +179,7 @@ example to summarise the page the user is on.
   `chunk`s. An aborted run — the iframe going away, for instance — emits none.
 
 ```js
-const id = crypto.randomUUID();
+const id = "example-run-1"; // Use a unique ID for each in-flight run.
 let text = "";
 
 window.addEventListener("message", (event) => {

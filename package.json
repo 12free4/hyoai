@@ -9,7 +9,7 @@
         "dev": "next dev -H 127.0.0.1 -p 4117",
         "check": "tsc --noEmit && eslint . && prettier --check .",
         "format": "prettier --write . && eslint --fix .",
-        "test:storage": "node --test tests/persistence.test.mjs tests/themePatch.test.mjs",
+        "test:storage": "node --test tests/persistence.test.mjs tests/themePatch.test.mjs tests/uuid.test.mjs",
         "test:storage:browser": "node tests/indexeddbBrowser.mjs",
         "postinstall": "node scripts/patch-next-themes.mjs",
         "prebuild": "node scripts/patch-next-themes.mjs",

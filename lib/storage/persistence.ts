@@ -1,3 +1,4 @@
+import { newId } from "@/lib/id";
 import { type Codec, StorageQuotaError } from "@/lib/storage/adapter";
 import { indexedDBStorage as storage } from "@/lib/storage/backend";
 import { cacheBootValue } from "@/lib/storage/bootCache";
@@ -488,7 +489,7 @@ export async function saveConflictCopy(id: string): Promise<void> {
     const raw = snapshot.values.get(STORAGE_KEYS.conversation(id));
     const value = draft.produce?.() ?? (raw ? JSON.parse(lzCodec.decode(raw)) : null);
     if (!value) throw new Error("No conversation body is available to copy");
-    const copyId = crypto.randomUUID();
+    const copyId = newId();
     const data = { ...(value as ConversationData), id: copyId };
     await createImportedConversation({ ...draft.metadata, id: copyId }, data, snapshot);
     cancel(STORAGE_KEYS.conversation(id));

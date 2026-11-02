@@ -7,14 +7,14 @@ import { fileURLToPath } from "node:url";
 import ts from "typescript";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const files = ["indexeddbAdapter", "indexeddbSchema", "indexeddb"];
+const files = ["storage/indexeddbAdapter", "storage/indexeddbSchema", "storage/indexeddb", "id"];
 const modules = files
     .map((name) => {
-        const source = fs.readFileSync(path.join(root, "lib", "storage", `${name}.ts`), "utf8");
+        const source = fs.readFileSync(path.join(root, "lib", `${name}.ts`), "utf8");
         const js = ts.transpileModule(source, {
             compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020 },
         }).outputText;
-        return `${JSON.stringify(`@/lib/storage/${name}`)}: function(require, module, exports) {\n${js}\n}`;
+        return `${JSON.stringify(`@/lib/${name}`)}: function(require, module, exports) {\n${js}\n}`;
     })
     .join(",\n");
 const test = String.raw`
@@ -25,8 +25,9 @@ const { IndexedDBStorage } = require("@/lib/storage/indexeddb");
 const assert = (v, m) => { if (!v) throw new Error(m); };
 async function rejects(fn, code) { try { await fn(); } catch (e) { assert(e.code === code, 'expected ' + code + ', got ' + e.code); return; } throw new Error('expected ' + code); }
 async function run() {
- const name = 'hyoai-test-' + crypto.randomUUID(); const a = new IndexedDBStorage(name); const b = new IndexedDBStorage(name);
- const first = await a.readSnapshot([]); const ctx = { dbEpoch: first.dbEpoch, conversationEpoch: first.conversationEpoch };
+ Object.defineProperty(crypto, "randomUUID", { value: undefined, configurable: true });
+ const name = 'hyoai-test-' + require("@/lib/id").newId(); const a = new IndexedDBStorage(name); const b = new IndexedDBStorage(name);
+ const first = await a.readSnapshot([]); assert(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(first.dbEpoch) && /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(first.conversationEpoch) && first.dbEpoch !== first.conversationEpoch, "initial epochs"); const ctx = { dbEpoch: first.dbEpoch, conversationEpoch: first.conversationEpoch };
  const receipt = await a.set('settings', 'one', ctx); assert(receipt.previousSize === 0 && receipt.currentSize === 22, 'write receipt');
  await rejects(() => a.set('meta', 'x', ctx), 'DATABASE_ERROR');
  await a.set('abc', '1', ctx); await a.set('abcd', '2', ctx); await a.set('ab￿tail', '3', ctx);
