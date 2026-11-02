@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { useTheme } from "@/hooks/useAppTheme";
 import { useIsMobile, useOnBreakpointCross } from "@/hooks/useMediaQuery";
 import { useStore } from "@/hooks/useStore";
+import { copyText } from "@/lib/clipboard";
 import { localeStore, setLocale } from "@/lib/stores/locale";
 import { setSkin, settingsStore } from "@/lib/stores/settings";
 import { LOCALES, type SkinId } from "@/types/settings";
@@ -41,10 +42,10 @@ export function HeaderOverflowMenu() {
 
     const copyLink = async () => {
         try {
-            await navigator.clipboard.writeText(window.location.href);
+            await copyText(window.location.href);
             toast.success(tc("linkCopied"));
         } catch {
-            // Clipboard may be unavailable (permissions, http origin); ignore
+            toast.error(tc("copyFailed"));
         }
     };
 

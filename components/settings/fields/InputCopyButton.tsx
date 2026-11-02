@@ -1,9 +1,12 @@
 "use client";
 
 import { Check, Copy } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
+import { toast } from "sonner";
 
 import { InputGroupButton } from "@/components/ui/input-group";
+import { copyText } from "@/lib/clipboard";
 
 /**
  * Copy-to-clipboard icon button meant to sit inside an input's trailing addon,
@@ -14,13 +17,19 @@ import { InputGroupButton } from "@/components/ui/input-group";
  * @param label - Accessible label for the button
  */
 export function InputCopyButton({ value, label }: { value: string; label: string }) {
+    const t = useTranslations("common");
     const [copied, setCopied] = useState(false);
 
     const handleCopy = async () => {
         if (!value) return;
-        await navigator.clipboard.writeText(value);
-        setCopied(true);
-        window.setTimeout(() => setCopied(false), 1500);
+        try {
+            await copyText(value);
+            setCopied(true);
+            window.setTimeout(() => setCopied(false), 1500);
+        } catch {
+            setCopied(false);
+            toast.error(t("copyFailed"));
+        }
     };
 
     return (

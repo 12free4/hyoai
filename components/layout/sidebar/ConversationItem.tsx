@@ -41,6 +41,7 @@ import { useIsCoarsePointer } from "@/hooks/useMediaQuery";
 import { useStore } from "@/hooks/useStore";
 import { deleteConversationById, openConversation } from "@/lib/actions";
 import { compareConversation, openConversationInPane } from "@/lib/chat/panes";
+import { copyText } from "@/lib/clipboard";
 import { compareStore } from "@/lib/stores/compare";
 import { patchMeta } from "@/lib/stores/conversations";
 import {
@@ -113,10 +114,10 @@ export function ConversationItem({ meta }: { meta: ConversationMeta }) {
 
     const handleCopyLink = async () => {
         try {
-            await navigator.clipboard.writeText(conversationShareUrl(meta.id));
+            await copyText(conversationShareUrl(meta.id));
             toast.success(tc("linkCopied"));
         } catch {
-            // Clipboard may be unavailable (permissions, http origin); ignore
+            toast.error(tc("copyFailed"));
         }
     };
 

@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { useStore } from "@/hooks/useStore";
+import { copyText } from "@/lib/clipboard";
 import { loadBaseRaw, loadConfigDraft, normalizeConfig } from "@/lib/config";
 import {
     buildConfig,
@@ -54,6 +55,7 @@ const SCROLL_SETTLE_MS = 400;
  */
 export function ConfigTab() {
     const t = useTranslations("settings");
+    const tc = useTranslations("common");
     const [draft, setDraft] = useState<Draft | null>(null);
     const [baseRaw, setBaseRaw] = useState<unknown>(null);
     const [copied, setCopied] = useState(false);
@@ -211,10 +213,15 @@ export function ConfigTab() {
 
     const handleCopy = async () => {
         if (!preview) return;
-        await navigator.clipboard.writeText(preview);
-        setCopied(true);
-        toast.success(t("config.copied"));
-        window.setTimeout(() => setCopied(false), 1500);
+        try {
+            await copyText(preview);
+            setCopied(true);
+            toast.success(t("config.copied"));
+            window.setTimeout(() => setCopied(false), 1500);
+        } catch {
+            setCopied(false);
+            toast.error(tc("copyFailed"));
+        }
     };
 
     return (
