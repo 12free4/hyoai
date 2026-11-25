@@ -264,7 +264,20 @@
         "toolsRetry": "Retry",
         "toolsRetryLabel": "Retry the connection to {provider}",
         "toolsCorsDetail": "The browser blocked the request: the server may be down, or it does not allow this page. The details are in the settings.",
-        "toolsLocalNetworkDetail": "The server is on the local network: allow this site to reach it in the browser, then retry. The details are in the settings."
+        "toolsLocalNetworkDetail": "The server is on the local network: allow this site to reach it in the browser, then retry. The details are in the settings.",
+        "attachOffice": "Office documents",
+        "officeProcessing": "Processing {count} document(s)…",
+        "officeProcessed": "Document processed: {name}",
+        "officeErrorUnsupported": "Unsupported document format: {name}",
+        "officeErrorEncrypted": "Document is encrypted or password-protected: {name}",
+        "officeErrorMalformed": "Document is malformed or damaged: {name}",
+        "officeErrorResourceLimit": "Document exceeds a safe extraction limit: {name}",
+        "officeErrorMissingPart": "Document is missing a required part: {name}",
+        "officeErrorNeedsOcr": "Document requires OCR: {name}",
+        "officeErrorInputLimit": "Document exceeds the input size limit: {name}",
+        "officeErrorOutputLimit": "Document exceeds the extracted text limit: {name}",
+        "officeErrorEmpty": "Document contains no extracted text: {name}",
+        "officeErrorGeneric": "Document extraction failed: {name}"
     },
     "contextBar": {
         "context": "Context: {used}/{total} ({percent}%)",

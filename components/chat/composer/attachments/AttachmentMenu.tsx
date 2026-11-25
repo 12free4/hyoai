@@ -3,6 +3,7 @@
 import {
     File,
     FileText,
+    FileSpreadsheet,
     Image as ImageIcon,
     MessageSquareText,
     Mic,
@@ -21,7 +22,7 @@ import {
 } from "@/components/common/ResponsiveMenu";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { AUDIO_ACCEPT } from "@/lib/files";
+import { AUDIO_ACCEPT, OFFICE_ACCEPT } from "@/lib/files";
 import { cn } from "@/lib/utils";
 
 interface MenuEntryProps {
@@ -90,6 +91,7 @@ interface AttachmentMenuProps {
     onAudioFiles: (files: File[]) => void;
     onTextFiles: (files: File[]) => void;
     onPdfFiles: (files: File[]) => void;
+    onOfficeFiles: (files: File[]) => void;
     onSystemMessage?: () => void;
     onProjectInstructions?: () => void;
     onAfterPick?: () => void;
@@ -120,6 +122,7 @@ export function AttachmentMenu({
     onAudioFiles,
     onTextFiles,
     onPdfFiles,
+    onOfficeFiles,
     onSystemMessage,
     onProjectInstructions,
     onAfterPick,
@@ -129,6 +132,7 @@ export function AttachmentMenu({
     const audioInputRef = useRef<HTMLInputElement>(null);
     const textInputRef = useRef<HTMLInputElement>(null);
     const pdfInputRef = useRef<HTMLInputElement>(null);
+    const officeInputRef = useRef<HTMLInputElement>(null);
 
     /**
      * Renders a hidden file input for the given type, and calls the provided callback
@@ -164,6 +168,7 @@ export function AttachmentMenu({
             {filePicker(audioInputRef, AUDIO_ACCEPT, onAudioFiles)}
             {filePicker(textInputRef, "", onTextFiles)}
             {filePicker(pdfInputRef, "application/pdf,.pdf", onPdfFiles)}
+            {filePicker(officeInputRef, OFFICE_ACCEPT, onOfficeFiles)}
             <ResponsiveMenu
                 align="start"
                 side="top"
@@ -192,6 +197,11 @@ export function AttachmentMenu({
                     icon={<File aria-hidden="true" />}
                     label={t("attachPdf")}
                     onSelect={() => pdfInputRef.current?.click()}
+                />
+                <MenuEntry
+                    icon={<FileSpreadsheet aria-hidden="true" />}
+                    label={t("attachOffice")}
+                    onSelect={() => officeInputRef.current?.click()}
                 />
                 {(onSystemMessage || onProjectInstructions) && <ResponsiveMenuSeparator />}
                 {onSystemMessage && (

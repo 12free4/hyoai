@@ -57,7 +57,7 @@ export function MessageEditor({
     const hasInput = Boolean(text.trim()) || att.attachments.length > 0;
 
     const submit = () => {
-        if (!hasInput) return;
+        if (!hasInput || att.isProcessing) return;
         if (!withAttachments) {
             onSubmit(text);
             return;
@@ -82,7 +82,14 @@ export function MessageEditor({
             onDragOver={withAttachments ? (event) => event.preventDefault() : undefined}
         >
             {withAttachments && (
-                <ComposerAttachments attachments={att.attachments} onRemove={att.remove} />
+                <>
+                    <ComposerAttachments attachments={att.attachments} onRemove={att.remove} />
+                    {att.isProcessing && (
+                        <p className="text-xs text-muted-foreground">
+                            {t("officeProcessing", { count: att.processingCount })}
+                        </p>
+                    )}
+                </>
             )}
             <Textarea
                 autoFocus
@@ -101,6 +108,7 @@ export function MessageEditor({
                         onAudioFiles={(files) => void att.addAudioFiles(files)}
                         onTextFiles={(files) => void att.addTextFiles(files)}
                         onPdfFiles={(files) => void att.addPdfFiles(files)}
+                        onOfficeFiles={(files) => void att.addOfficeFiles(files)}
                     />
                 )}
                 <div className="ml-auto flex gap-2">
@@ -110,7 +118,7 @@ export function MessageEditor({
                     <Button
                         type="button"
                         size="sm"
-                        disabled={!hasInput}
+                        disabled={!hasInput || att.isProcessing}
                         onClick={submit}
                         {...confirmProps}
                     >

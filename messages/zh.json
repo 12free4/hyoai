@@ -264,7 +264,20 @@
         "toolsRetry": "重试",
         "toolsRetryLabel": "重新连接到 {provider}",
         "toolsCorsDetail": "浏览器阻止了请求：服务器可能已停止运行，也可能不允许当前页面访问。详情请查看设置。",
-        "toolsLocalNetworkDetail": "服务器位于本地网络。请在浏览器中允许此网站访问本地网络，然后重试。详情请查看设置。"
+        "toolsLocalNetworkDetail": "服务器位于本地网络。请在浏览器中允许此网站访问本地网络，然后重试。详情请查看设置。",
+        "attachOffice": "Office 文档",
+        "officeProcessing": "正在解析文档（{count}）…",
+        "officeProcessed": "文档解析完成：{name}",
+        "officeErrorUnsupported": "不支持的文档格式：{name}",
+        "officeErrorEncrypted": "文档已加密或受密码保护：{name}",
+        "officeErrorMalformed": "文档格式错误或已损坏：{name}",
+        "officeErrorResourceLimit": "文档超出安全解析限制：{name}",
+        "officeErrorMissingPart": "文档缺少必要部分：{name}",
+        "officeErrorNeedsOcr": "文档需要文字识别（OCR）：{name}",
+        "officeErrorInputLimit": "文档超出文件大小限制：{name}",
+        "officeErrorOutputLimit": "提取的文本超出大小限制：{name}",
+        "officeErrorEmpty": "文档未提取到文本：{name}",
+        "officeErrorGeneric": "文档解析失败：{name}"
     },
     "contextBar": {
         "context": "上下文：{used}/{total}（{percent}%）",
