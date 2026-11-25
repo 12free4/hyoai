@@ -4,6 +4,7 @@ import { Check, Copy } from "lucide-react";
 import { useState } from "react";
 
 import { InputGroupButton } from "@/components/ui/input-group";
+import { copyText } from "@/lib/clipboard";
 
 /**
  * Copy-to-clipboard icon button meant to sit inside an input's trailing addon,
@@ -18,7 +19,7 @@ export function InputCopyButton({ value, label }: { value: string; label: string
 
     const handleCopy = async () => {
         if (!value) return;
-        await navigator.clipboard.writeText(value);
+        await copyText(value);
         setCopied(true);
         window.setTimeout(() => setCopied(false), 1500);
     };

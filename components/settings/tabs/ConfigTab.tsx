@@ -13,6 +13,7 @@ import { SettingJson } from "@/components/settings/fields/SettingJson";
 import { SettingSelect } from "@/components/settings/fields/SettingSelect";
 import { SettingText } from "@/components/settings/fields/SettingText";
 import { Button } from "@/components/ui/button";
+import { copyText } from "@/lib/clipboard";
 import { useConfigDraft } from "@/hooks/useConfigDraft";
 import { useStore } from "@/hooks/useStore";
 import { setConfigResetOpen, uiStore } from "@/lib/stores/ui";
@@ -57,7 +58,7 @@ export function ConfigTab() {
 
     const handleCopy = async () => {
         if (!preview) return;
-        await navigator.clipboard.writeText(preview);
+        await copyText(preview);
         setCopied(true);
         toast.success(t("config.copied"));
         window.setTimeout(() => setCopied(false), COPIED_MS);

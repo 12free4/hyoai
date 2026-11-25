@@ -24,6 +24,7 @@ import { Shortcut } from "@/components/ui/shortcut";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useStore } from "@/hooks/useStore";
 import { addPane, closeCompare, openCompare, startNewChat } from "@/lib/chat/panes";
+import { copyText } from "@/lib/clipboard";
 import { compareStore, MAX_PANES } from "@/lib/stores/compare";
 import {
     openSettings,
@@ -49,7 +50,7 @@ export function AppHeader() {
 
     const copyShareLink = async () => {
         try {
-            await navigator.clipboard.writeText(window.location.href);
+            await copyText(window.location.href);
             toast.success(tc("linkCopied"));
         } catch {
             // Clipboard may be unavailable (permissions, http origin); ignore

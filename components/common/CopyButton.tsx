@@ -4,6 +4,7 @@ import { Check, Copy } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { copyText } from "@/lib/clipboard";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface CopyButtonProps {
@@ -34,7 +35,7 @@ export function CopyButton({ text, label, copiedLabel, className }: CopyButtonPr
 
     const handleCopy = async () => {
         try {
-            await navigator.clipboard.writeText(text);
+            await copyText(text);
             setCopied(true);
             if (timeoutRef.current !== null) window.clearTimeout(timeoutRef.current);
             timeoutRef.current = window.setTimeout(() => setCopied(false), 2000);

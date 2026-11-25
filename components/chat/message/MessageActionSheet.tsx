@@ -12,6 +12,7 @@ import { useIsMobile, useOnBreakpointCross } from "@/hooks/useMediaQuery";
 import { useMessageActions } from "@/hooks/useMessageActions";
 import { useMessageFeedback } from "@/hooks/useMessageFeedback";
 import { cn } from "@/lib/utils";
+import { copyText } from "@/lib/clipboard";
 import type { MessageNode } from "@/types/chat";
 
 /**
@@ -95,7 +96,7 @@ export function MessageActionSheet({ node, open, onOpenChange, onEdit }: Message
 
     // Copy the message content to the clipboard, then show a toast.
     const handleCopy = async (text: string) => {
-        await navigator.clipboard.writeText(text);
+        await copyText(text);
         toast.success(tc("copied"));
     };
 

@@ -46,6 +46,7 @@ import { useLongPress } from "@/hooks/useLongPress";
 import { useIsCoarsePointer, useIsCompact, useIsMobile } from "@/hooks/useMediaQuery";
 import { useProjects } from "@/hooks/useProjects";
 import { useStore } from "@/hooks/useStore";
+import { copyText } from "@/lib/clipboard";
 import {
     deleteConversationById,
     moveConversationToNewProject,
@@ -188,7 +189,7 @@ export function ConversationItem({ meta, project }: { meta: ConversationMeta; pr
 
     const handleCopyLink = async () => {
         try {
-            await navigator.clipboard.writeText(conversationShareUrl(meta.id));
+            await copyText(conversationShareUrl(meta.id));
             toast.success(tc("linkCopied"));
         } catch {
             // Clipboard may be unavailable (permissions, http origin); ignore

@@ -16,6 +16,7 @@ import { useIsMobile, useOnBreakpointCross } from "@/hooks/useMediaQuery";
 import { useStore } from "@/hooks/useStore";
 import { useThemeSwitch } from "@/hooks/useThemeSwitch";
 import { closeCompare } from "@/lib/chat/panes";
+import { copyText } from "@/lib/clipboard";
 import { compareStore } from "@/lib/stores/compare";
 import { localeStore, setLocale } from "@/lib/stores/locale";
 import { setSkin, settingsStore } from "@/lib/stores/settings";
@@ -46,7 +47,7 @@ export function HeaderOverflowMenu() {
 
     const copyLink = async () => {
         try {
-            await navigator.clipboard.writeText(window.location.href);
+            await copyText(window.location.href);
             toast.success(tc("linkCopied"));
         } catch {
             // Clipboard may be unavailable (permissions, http origin); ignore
