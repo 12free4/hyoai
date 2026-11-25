@@ -1,5 +1,5 @@
 import { openConversation, reloadLiveConversation, startNewConversation } from "@/lib/actions";
-import { setPersistenceGate } from "@/lib/storage/local";
+import { onStorageChange, setPersistenceGate } from "@/lib/storage/local";
 import { runMigrations } from "@/lib/storage/migrations";
 import { registerLifecycleFlush } from "@/lib/storage/persistence";
 import {
@@ -29,7 +29,7 @@ import { STORAGE_KEYS } from "@/types/storage";
 let booted = false;
 
 /**
- * Client boot sequence: migrations, store hydration from localStorage, the
+ * Client boot sequence: migrations, store hydration from IndexedDB, the
  * config.json fetch for the server list, lifecycle flush listeners and the
  * conversation referenced by the URL, or a fresh one to land on.
  */
@@ -76,28 +76,26 @@ export async function bootApp(): Promise<void> {
 let crossTabWired = false;
 
 /**
- * Reflect conversation changes persisted by other same-origin tabs. The browser
- * fires a storage event on each localStorage write in every OTHER tab, so an
- * index write re-hydrates the conversation list and a payload write reloads the
- * open conversation (when idle), letting one tab follow along as another -- e.g.
- * an embed widget -- generates and persists. The projects follow the same way,
+ * Reflect conversation changes committed by other same-origin tabs. IndexedDB
+ * writes announce their keys over BroadcastChannel (with a localStorage signal
+ * as a fallback), so an index change re-hydrates the list and a payload change
+ * reloads the open conversation when idle. The projects follow the same way,
  * except in the embed, which has none.
  */
 function enableCrossTabRefresh(): void {
     if (crossTabWired || typeof window === "undefined") return;
     crossTabWired = true;
 
-    // IndexedDB raises no storage event, so the documents have a channel of their own.
+    // Project documents use their own IndexedDB database and synchronization channel.
     enableDocumentsSync();
-    window.addEventListener("storage", (event) => {
-        if (event.storageArea !== window.localStorage || !event.key) return;
-        if (event.key === STORAGE_KEYS.conversationsIndex) {
+    onStorageChange((key) => {
+        if (key === STORAGE_KEYS.conversationsIndex) {
             void hydrateConversations();
-        } else if (event.key === STORAGE_KEYS.projects) {
+        } else if (key === STORAGE_KEYS.projects) {
             // The embed reads without writing, so it must not pick up the host's projects.
             if (!uiStore.getState().embed) void hydrateProjects();
-        } else if (event.key.startsWith(STORAGE_KEYS.conversationPrefix)) {
-            reloadLiveConversation(event.key.slice(STORAGE_KEYS.conversationPrefix.length));
+        } else if (key.startsWith(STORAGE_KEYS.conversationPrefix)) {
+            reloadLiveConversation(key.slice(STORAGE_KEYS.conversationPrefix.length));
         }
     });
 }
@@ -132,7 +130,7 @@ let embedBooted = false;
 /**
  * Boot sequence for the embeddable compact widget. A write gate keeps the
  * URL-driven configuration in the in-memory stores only, so it never overwrites
- * the host app's saved preferences (the same origin shares one localStorage).
+ * the host app's saved preferences (the same origin shares one IndexedDB database).
  * The minimal widget drops every write and stays ephemeral; the sidebar variant
  * additionally admits conversation keys, then hydrates the conversation index
  * and opens the URL conversation or a fresh one so its sidebar has history. The

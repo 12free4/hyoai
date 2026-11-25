@@ -6,8 +6,8 @@ import { STORAGE_KEYS, type StorageUsage } from "@/types/storage";
 
 const DEBOUNCE_MS = 500;
 const MAX_WAIT_MS = 2000;
-// localStorage has no exact quota API; 5 MB is the common per-origin budget.
-const QUOTA_BYTES = 5 * 1024 * 1024;
+// Used only when the browser does not expose StorageManager.estimate().
+const FALLBACK_QUOTA_BYTES = 50 * 1024 * 1024;
 
 /**
  * A queued write for one storage key. The value is produced lazily at flush
@@ -366,15 +366,15 @@ export async function listConversationIds(): Promise<string[]> {
 }
 
 /**
- * Estimate localStorage usage for all app keys.
- * Sizes count both key and value at two bytes per UTF-16 code unit, which is
- * how browsers account localStorage against the quota.
+ * Estimate origin storage usage and keep a logical per-conversation breakdown.
+ * StorageManager reports origin-wide IndexedDB/cache usage and quota; the
+ * logical estimate counts only HYOAI keys and is useful for the conversation list.
  *
- * @returns Usage with total bytes, assumed quota and per-conversation sizes
+ * @returns Usage with browser quota, logical HYOAI bytes and per-conversation sizes
  */
 export async function estimateUsage(): Promise<StorageUsage> {
     const keys = await localStorageAdapter.keys("lc:");
-    let usedBytes = 0;
+    let logicalBytes = 0;
 
     const conversations: { id: string; bytes: number }[] = [];
     for (const key of keys) {
@@ -384,7 +384,7 @@ export async function estimateUsage(): Promise<StorageUsage> {
         }
 
         const bytes = (key.length + value.length) * 2;
-        usedBytes += bytes;
+        logicalBytes += bytes;
         if (key.startsWith(STORAGE_KEYS.conversationPrefix)) {
             conversations.push({
                 id: key.slice(STORAGE_KEYS.conversationPrefix.length),
@@ -393,5 +393,18 @@ export async function estimateUsage(): Promise<StorageUsage> {
         }
     }
     conversations.sort((a, b) => b.bytes - a.bytes);
-    return { usedBytes, quotaBytes: QUOTA_BYTES, conversations };
+    let estimate: StorageEstimate | undefined;
+    try {
+        if (typeof navigator !== "undefined" && navigator.storage?.estimate) {
+            estimate = await navigator.storage.estimate();
+        }
+    } catch {
+        // Use the logical estimate when the browser refuses the quota API.
+    }
+    return {
+        usedBytes: estimate?.usage ?? logicalBytes,
+        quotaBytes: estimate?.quota ?? FALLBACK_QUOTA_BYTES,
+        logicalBytes,
+        conversations,
+    };
 }

@@ -16,7 +16,7 @@ import { useStore } from "@/hooks/useStore";
 import { formatBytes } from "@/lib/format";
 import { buildExport, parseImport } from "@/lib/storage/io";
 import { parseLlamaCppExport } from "@/lib/storage/llamacpp";
-import { localStorageAdapter } from "@/lib/storage/local";
+import { clearLegacyBackup, localStorageAdapter } from "@/lib/storage/local";
 import { conversationsStore } from "@/lib/stores/conversations";
 import { clearAllDocuments, documentsStore } from "@/lib/stores/documents";
 import {
@@ -56,7 +56,7 @@ function parseAnyImport(
 
 /**
  * Data page of the settings: selective JSON export (native or llama.cpp webui
- * format), import of both formats, a local storage meter with the full,
+ * format), import of both formats, a browser storage meter with the full,
  * scrollable per-conversation breakdown and a deletion of chosen conversations, which also
  * offers the confirmed clear-all action. The export row
  * also states that projects are not exported, except in an embed, which has no projects.
@@ -99,6 +99,7 @@ export function DataTab() {
         for (const key of keys) {
             await localStorageAdapter.remove(key);
         }
+        clearLegacyBackup();
 
         // The documents of the projects are in IndexedDB: the embed has none to clear.
         if (!embed) {

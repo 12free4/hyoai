@@ -1,7 +1,7 @@
 import type { Conversation } from "@/types/chat";
 import type { AppSettings } from "@/types/settings";
 
-// Centralized localStorage key layout, all prefixed with "lc:".
+// Centralized application key layout in IndexedDB, all prefixed with "lc:".
 export const STORAGE_KEYS = {
     meta: "lc:meta",
     locale: "lc:locale",
@@ -100,5 +100,6 @@ export interface ExportFile {
 export interface StorageUsage {
     usedBytes: number;
     quotaBytes: number;
+    logicalBytes?: number;
     conversations: { id: string; bytes: number }[];
 }
