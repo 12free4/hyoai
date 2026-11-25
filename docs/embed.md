@@ -22,7 +22,7 @@ whose selector is hidden, with a welcome heading above the composer and nothing
 written to storage. Everything below is refinement.
 
 The widget fills its iframe, so its size is the iframe's size. Embed mode is
-resolved from the URL before the first paint (skin, locale and theme included),
+resolved from the URL before the first paint (skin and theme included),
 and the body stays hidden until the compact surface mounts, so the host never
 sees a flash of the full application.
 
@@ -47,8 +47,7 @@ working widget. Booleans accept `1`/`true` and `0`/`false`.
 | `embed`       | `1`, `true`, empty, or any other value              | —        | Enables embed mode. Any other non-empty value is kept as a widget id, reserved for future per-widget memory |
 | `theme`       | `light`, `dark`, `system`                           | `system` | Forces the colour theme                                                                                     |
 | `skin`        | `flat`, `soft`, `contrast`, `warm`, `forest`, `dim` | `soft`   | Forces the UI skin                                                                                          |
-| `lang`        | `fr`, `en`                                          | `fr`     | Forces the UI locale, which unlike the full app does not follow the browser                                 |
-| `model`       | a `models` entry id from `config.json`              | —        | Preselects that [entry](models.md#keys-of-a-models-entry); ignored when no entry carries the id             |
+| | `model`       | a `models` entry id from `config.json`              | —        | Preselects that [entry](models.md#keys-of-a-models-entry); ignored when no entry carries the id             |
 | `upstream`    | upstream model id                                   | —        | Upstream model to use within the preselected entry                                                          |
 | `lock`        | boolean                                             | `0`      | Hides the model selector. A display hint, not a security boundary                                           |
 | `temperature` | number                                              | —        | Sampling override                                                                                           |
@@ -78,7 +77,7 @@ A host page and its widget share one origin, therefore one `localStorage`. The
 widget guards against trampling the full app's saved preferences with a write
 gate installed at boot:
 
-- **Minimal variant**: every write is dropped. The URL-driven look, locale and
+- **Minimal variant**: every write is dropped. The URL-driven look and
   sampling live in memory only and the widget is fully ephemeral.
 - **Sidebar variant**: only the conversation index (`lc:convs`) and the
   `lc:conv:` keys are admitted, so history persists while settings still do not.

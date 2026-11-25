@@ -18,14 +18,13 @@ import { useThemeSwitch } from "@/hooks/useThemeSwitch";
 import { closeCompare } from "@/lib/chat/panes";
 import { copyText } from "@/lib/clipboard";
 import { compareStore } from "@/lib/stores/compare";
-import { localeStore, setLocale } from "@/lib/stores/locale";
 import { setSkin, settingsStore } from "@/lib/stores/settings";
-import { LOCALES, type SkinId } from "@/types/settings";
+import type { SkinId } from "@/types/settings";
 
 const SKINS: SkinId[] = ["soft", "flat", "contrast", "warm", "forest", "dim"];
 
 /**
- * Mobile-only overflow menu gathering the appearance switchers (theme, language,
+ * Mobile-only overflow menu gathering the appearance switchers (theme,
  * skin) and the copy-link action, which stay inline in the header on desktop, plus the way
  * back to a single chat while comparing. It renders as a bottom sheet on the phone-sized
  * viewport it targets, flattening each switcher's options into tap rows rather than nesting
@@ -37,7 +36,6 @@ export function HeaderOverflowMenu() {
     const tsk = useTranslations("header.skin");
     const tc = useTranslations("common");
     const { theme, setTheme } = useThemeSwitch();
-    const locale = useStore(localeStore, (state) => state.locale);
     const skin = useStore(settingsStore, (state) => state.settings.skin);
     const compareEnabled = useStore(compareStore, (state) => state.enabled);
     const [open, setOpen] = useState(false);
@@ -97,15 +95,6 @@ export function HeaderOverflowMenu() {
                 <span className="flex-1">{tt("system")}</span>
                 {theme === "system" && <Check aria-hidden="true" />}
             </ResponsiveMenuItem>
-
-            <ResponsiveMenuSeparator />
-            <ResponsiveMenuLabel>{t("language")}</ResponsiveMenuLabel>
-            {LOCALES.map(({ id, label }) => (
-                <ResponsiveMenuItem key={id} onSelect={() => setLocale(id)} closeOnSelect={false}>
-                    <span className="flex-1">{label}</span>
-                    {locale === id && <Check aria-hidden="true" />}
-                </ResponsiveMenuItem>
-            ))}
 
             <ResponsiveMenuSeparator />
             <ResponsiveMenuLabel>{tsk("label")}</ResponsiveMenuLabel>

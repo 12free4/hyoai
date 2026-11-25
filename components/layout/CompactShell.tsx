@@ -23,7 +23,6 @@ import { ChatInstance } from "@/lib/chat/instance";
 import { getEmbedOrigins, isEmbedOriginAllowed } from "@/lib/config";
 import { buildUsage, EMBED_CAPABILITIES, EMBED_CHANNEL, type EmbedOutbound } from "@/lib/embed";
 import { createBudgetPublisher, currentWindow, lastUsage, readBudget } from "@/lib/embedBudget";
-import { setLocale } from "@/lib/stores/locale";
 import { modelsStore } from "@/lib/stores/models";
 import { settingsStore, updateSettings } from "@/lib/stores/settings";
 import {
@@ -39,7 +38,7 @@ import { APP_VERSION } from "@/lib/version";
 import { CHAT_WIDTH_CLASS } from "@/types/settings";
 
 /**
- * Host postMessage channel for the widget. Accepts config (system prompt, locale, theme, starter
+ * Host postMessage channel for the widget. Accepts config (system prompt, theme, starter
  * suggestions and placeholder), send, run, abort, getBudget and newConversation
  * actions on the "hyoai-embed" channel only from allowed origins (same-origin plus the
  * configured embedOrigins, which may be bare host/IP tokens), announces
@@ -110,7 +109,6 @@ function useEmbedChannel(onSend: (text: string) => void, onNew: () => void): Set
                     ) {
                         setEmbedThemeOverride(data.theme);
                     }
-                    if (data.lang === "fr" || data.lang === "en") setLocale(data.lang);
                     setEmbedSuggestions(data.suggestions);
                     setEmbedPlaceholder(data.placeholder);
                     break;

@@ -1,4 +1,4 @@
-import type { ChatWidth, Locale, SamplingSettings, SkinId } from "@/types/settings";
+import type { ChatWidth, SamplingSettings, SkinId } from "@/types/settings";
 
 // Query parameter carrying the open conversation id, e.g. ?chat=<uuid>.
 const CHAT_PARAM = "chat";
@@ -214,7 +214,6 @@ const CHAT_WIDTHS: ChatWidth[] = ["medium", "large", "xlarge"];
  * @param id - Non-empty embed id, reserved for future per-widget conversation memory
  * @param theme - Forced color theme applied through the ThemeProvider
  * @param skin - Forced UI skin
- * @param locale - Forced UI locale
  * @param modelEntryId - Config entry id to preselect
  * @param upstreamModel - Upstream model id for the preselected entry
  * @param modelLock - Hide the model selector so the forced model cannot be changed; a display hint, not a security boundary
@@ -230,7 +229,6 @@ export interface EmbedConfig {
     id: string | null;
     theme?: EmbedTheme;
     skin?: SkinId;
-    locale?: Locale;
     modelEntryId?: string;
     upstreamModel?: string;
     modelLock?: boolean;
@@ -283,7 +281,6 @@ export function getEmbedConfig(): EmbedConfig | null {
 
     const theme = params.get("theme");
     const skin = params.get("skin");
-    const lang = params.get("lang");
     const input = params.get("input");
     const width = params.get("width");
 
@@ -297,7 +294,6 @@ export function getEmbedConfig(): EmbedConfig | null {
         id,
         theme: theme === "light" || theme === "dark" || theme === "system" ? theme : undefined,
         skin: SKIN_IDS.includes(skin as SkinId) ? (skin as SkinId) : undefined,
-        locale: lang === "fr" || lang === "en" ? lang : undefined,
         modelEntryId: params.get("model") ?? undefined,
         upstreamModel: params.get("upstream") ?? undefined,
         modelLock: boolParam(params.get("lock")),

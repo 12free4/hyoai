@@ -15,7 +15,7 @@ import {
     hydrateDocuments,
     sweepOrphanDocuments,
 } from "@/lib/stores/documents";
-import { hydrateLocale, setLocale } from "@/lib/stores/locale";
+import { hydrateLocale } from "@/lib/stores/locale";
 import { initModels, modelsStore, pruneStaleOverride, setActiveModel } from "@/lib/stores/models";
 import { hydrateProjects, projectsStore } from "@/lib/stores/projects";
 import { hydrateSettings, setSkin, settingsStore, updateSettings } from "@/lib/stores/settings";
@@ -153,7 +153,6 @@ export async function bootEmbed(config: EmbedConfig): Promise<void> {
             : () => false,
     );
 
-    if (config.locale) setLocale(config.locale);
     if (config.skin) setSkin(config.skin);
 
     updateSettings(embedSettingsPatch(config, settingsStore.getState().settings));

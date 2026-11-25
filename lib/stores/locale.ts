@@ -1,52 +1,31 @@
-import { localStorageAdapter } from "@/lib/storage/local";
 import { createStore } from "@/lib/store";
-import { type Locale, LOCALES } from "@/types/settings";
-import { STORAGE_KEYS } from "@/types/storage";
+import type { Locale } from "@/types/settings";
 
-// First declared locale, used as the fallback when nothing else matches.
-const FALLBACK_LOCALE: Locale = LOCALES[0].id;
+const DEFAULT_LOCALE: Locale = "zh";
 
-// UI locale, persisted to lc:locale as a raw string by setLocale.
 interface LocaleState {
     locale: Locale;
 }
 
-export const localeStore = createStore<LocaleState>({ locale: FALLBACK_LOCALE });
+export const localeStore = createStore<LocaleState>({ locale: DEFAULT_LOCALE });
 
 /**
- * Narrow an arbitrary string to a supported locale id.
+ * Fix the interface language to Simplified Chinese.
  *
- * @param value - String to check
- * @returns The matching locale id, or null if none matches
- */
-function asLocale(value: string | null | undefined): Locale | null {
-    return LOCALES.some((entry) => entry.id === value) ? (value as Locale) : null;
-}
-
-/**
- * Resolve the active locale at mount: the persisted value, else the browser
- * language, else the fallback. Updates the store and the document language.
+ * The locale is deliberately not persisted: browser language, old preferences,
+ * embed URLs and host messages must not switch the application back to English
+ * or French.
  */
 export async function hydrateLocale(): Promise<void> {
     if (typeof document === "undefined") return;
-
-    const stored = asLocale(await localStorageAdapter.get(STORAGE_KEYS.locale));
-    const browser = asLocale((navigator.language || "").slice(0, 2));
-    const locale = stored ?? browser ?? FALLBACK_LOCALE;
-
-    localeStore.setState({ locale });
-    document.documentElement.lang = locale;
+    localeStore.setState({ locale: DEFAULT_LOCALE });
+    document.documentElement.lang = "zh-CN";
 }
 
 /**
- * Change the UI locale, persist it and update the document language.
- *
- * @param locale - Locale to activate
+ * Retained for internal callers that explicitly select the sole supported locale.
  */
-export function setLocale(locale: Locale): void {
-    localeStore.setState({ locale });
-    if (typeof document !== "undefined") {
-        document.documentElement.lang = locale;
-    }
-    void localStorageAdapter.set(STORAGE_KEYS.locale, locale);
+export function setLocale(_locale: Locale): void {
+    localeStore.setState({ locale: DEFAULT_LOCALE });
+    if (typeof document !== "undefined") document.documentElement.lang = "zh-CN";
 }

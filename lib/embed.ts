@@ -1,6 +1,5 @@
 import { normalizeEntries } from "@/lib/suggestions";
 import type { PropsState, SuggestionEntry, SuggestionEntryInput } from "@/types/server";
-import type { Locale } from "@/types/settings";
 
 /**
  * postMessage channel shared by the embeddable widget and its host page. Every
@@ -15,7 +14,7 @@ type EmbedTheme = "light" | "dark" | "system";
  * Frozen contract for messages the host page sends down to the embedded widget.
  * Every variant is tagged by `type` on EMBED_CHANNEL:
  *
- * - config: hot updates to the widget (system prompt, locale, theme, suggestions, placeholder). The
+ * - config: hot updates to the widget (system prompt, theme, suggestions, placeholder). The
  *   suggestions are one language's list, in the shape of one entry of the config
  *   suggestions map; an array replaces the previous host list, an empty one clears it, a
  *   value that is not an array is ignored, and a malformed category, item or direct suggestion is
@@ -42,7 +41,6 @@ export type EmbedInbound =
           channel: typeof EMBED_CHANNEL;
           type: "config";
           systemPrompt?: string;
-          lang?: Locale;
           theme?: EmbedTheme;
           suggestions?: SuggestionEntryInput[];
           placeholder?: string;

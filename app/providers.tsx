@@ -88,7 +88,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
             <NextIntlClientProvider
                 locale={locale}
                 messages={MESSAGES[locale]}
-                timeZone="Europe/Paris"
+                timeZone="Asia/Shanghai"
             >
                 <TooltipProvider delayDuration={300}>{children}</TooltipProvider>
                 <QuotaWatcher />

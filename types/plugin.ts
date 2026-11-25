@@ -80,7 +80,7 @@ export interface HyoaiPlugin {
     id: string;
     apiVersion: typeof PLUGIN_API_VERSION;
     serverTypes?: ServerTypeDefinition[];
-    messages?: Partial<Record<"en" | "fr", PluginMessages>>;
+    messages?: Partial<Record<"en" | "zh", PluginMessages>>;
     upgradeNode?: (node: unknown) => unknown;
     toolProviders?: ToolProvider[];
 }

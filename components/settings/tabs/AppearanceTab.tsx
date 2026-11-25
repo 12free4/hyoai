@@ -15,22 +15,19 @@ import {
 import { useIsCoarsePointer, useIsMobile, useIsNarrow } from "@/hooks/useMediaQuery";
 import { useStore } from "@/hooks/useStore";
 import { useThemeSwitch } from "@/hooks/useThemeSwitch";
-import { localeStore, setLocale } from "@/lib/stores/locale";
 import { setSkin, settingsStore, updateSettings } from "@/lib/stores/settings";
 import { uiStore } from "@/lib/stores/ui";
 import { cn } from "@/lib/utils";
-import { LOCALES } from "@/types/settings";
-import type { ChatWidth, DisplaySettings, Locale, SkinId } from "@/types/settings";
+import type { ChatWidth, DisplaySettings, SkinId } from "@/types/settings";
 
 /**
- * Appearance page of the settings: theme, skin, language, chat width, compact input, message
+ * Appearance page of the settings: theme, skin, chat width, compact input, message
  * stats and the expand-after-answer toggles, as flat rows.
  */
 export function AppearanceTab() {
     const t = useTranslations("settings.general");
     const th = useTranslations("header");
     const settings = useStore(settingsStore, (state) => state.settings);
-    const locale = useStore(localeStore, (state) => state.locale);
     const { theme, setTheme } = useThemeSwitch();
     const isMobile = useIsMobile();
     const isNarrow = useIsNarrow();
@@ -79,23 +76,6 @@ export function AppearanceTab() {
                                     <SelectItem value="warm">{th("skin.warm")}</SelectItem>
                                     <SelectItem value="forest">{th("skin.forest")}</SelectItem>
                                     <SelectItem value="dim">{th("skin.dim")}</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </SettingRow>
-                        <SettingRow label={t("language")} htmlFor="appearance-language">
-                            <Select
-                                value={locale}
-                                onValueChange={(value) => setLocale(value as Locale)}
-                            >
-                                <SelectTrigger id="appearance-language" className="w-40">
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {LOCALES.map(({ id, label }) => (
-                                        <SelectItem key={id} value={id}>
-                                            {label}
-                                        </SelectItem>
-                                    ))}
                                 </SelectContent>
                             </Select>
                         </SettingRow>

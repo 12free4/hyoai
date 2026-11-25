@@ -2,16 +2,8 @@
 export const SKIN_IDS = ["flat", "soft", "contrast", "warm", "forest", "dim"] as const;
 export type SkinId = (typeof SKIN_IDS)[number];
 
-/**
- * Supported UI locales with their native labels. Single source of truth, reused
- * by the language switchers and the mount-time locale detection. Order is the
- * display order; the first entry is the fallback locale.
- */
-export const LOCALES = [
-    { id: "fr", label: "Français" },
-    { id: "en", label: "English" },
-] as const;
-export type Locale = (typeof LOCALES)[number]["id"];
+/** The application interface is fixed to Simplified Chinese. */
+export type Locale = "zh";
 
 // Width of the single-chat column and composer on large screens.
 export type ChatWidth = "medium" | "large" | "xlarge";

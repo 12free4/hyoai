@@ -16,7 +16,6 @@ import { toast } from "sonner";
 
 import { HeaderOverflowMenu } from "@/components/layout/header/HeaderOverflowMenu";
 import { HeaderTitle } from "@/components/layout/header/HeaderTitle";
-import { LanguageSwitcher } from "@/components/layout/header/LanguageSwitcher";
 import { SkinSwitcher } from "@/components/layout/header/SkinSwitcher";
 import { ThemeToggle } from "@/components/layout/header/ThemeToggle";
 import { Button } from "@/components/ui/button";
@@ -24,8 +23,8 @@ import { Shortcut } from "@/components/ui/shortcut";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useStore } from "@/hooks/useStore";
 import { addPane, closeCompare, openCompare, startNewChat } from "@/lib/chat/panes";
-import { copyText } from "@/lib/clipboard";
 import { compareStore, MAX_PANES } from "@/lib/stores/compare";
+import { copyText } from "@/lib/clipboard";
 import {
     openSettings,
     setCommandOpen,
@@ -178,7 +177,6 @@ export function AppHeader() {
                 <span className="hidden md:contents">
                     <SkinSwitcher />
                     <ThemeToggle />
-                    <LanguageSwitcher />
                 </span>
                 <HeaderOverflowMenu />
                 <Tooltip>
