@@ -56,14 +56,17 @@ export function toolPolicyKey(providerId: string, toolName: string, scope?: stri
 }
 
 /**
- * The policy that applies to a tool: its own entry, else the default.
+ * The policy that applies to a tool: its saved entry, then its built-in default if defined,
+ * then the general default.
  *
  * @param settings - Tool settings, read for the policies table and defaultPolicy
  * @param key - Policy key of the tool
  * @returns The effective policy
  */
 export function policyFor(settings: ToolSettings, key: string): ToolPolicy {
-    return settings.policies[key] ?? settings.defaultPolicy;
+    return (
+        settings.policies[key] ?? (key === "clock/current_time" ? "allow" : settings.defaultPolicy)
+    );
 }
 
 /**

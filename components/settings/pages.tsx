@@ -7,11 +7,9 @@ import {
     Palette,
     Plug,
     Scissors,
-    ScrollText,
     SlidersHorizontal,
     Wrench,
 } from "lucide-react";
-import dynamic from "next/dynamic";
 import type { ComponentType } from "react";
 
 import { AppearanceTab } from "@/components/settings/tabs/AppearanceTab";
@@ -25,7 +23,6 @@ import { SamplingTab } from "@/components/settings/tabs/SamplingTab";
 import { ServersTab } from "@/components/settings/tabs/ServersTab";
 import { ToolsTab } from "@/components/settings/tabs/ToolsTab";
 import type { SettingsPage } from "@/lib/stores/ui";
-import { APP_VERSION } from "@/lib/version";
 
 /**
  * Where a page shows when the app runs embedded: everywhere, only with the sidebar (the page
@@ -35,31 +32,22 @@ import { APP_VERSION } from "@/lib/version";
 export type EmbedVisibility = "always" | "sidebar" | "never";
 
 /**
- * One page of the settings: its place in the navigation, what it shows and, optionally, a short
- * text at the end of its row.
+ * One page of the settings and its place in the navigation.
  */
 export interface SettingsPageDef {
     id: SettingsPage;
     icon: LucideIcon;
     embed: EmbedVisibility;
     Content: ComponentType;
-    meta?: string;
 }
 
 /**
- * A group of pages in the navigation. A pinned group sits at the foot of the list, whatever the
- * height of the dialog.
+ * A group of pages in the navigation.
  */
 export interface SettingsGroupDef {
-    id: "preferences" | "customize" | "platform" | "generation" | "about";
+    id: "preferences" | "customize" | "platform" | "generation";
     pages: SettingsPageDef[];
-    pinned?: boolean;
 }
-
-// The release notes weigh as much as the rest of a page, so they load when the page is opened.
-const ChangelogTab = dynamic(() =>
-    import("@/components/settings/tabs/ChangelogTab").then((module) => module.ChangelogTab),
-);
 
 /**
  * Sampling and its repetition penalties are two groups of one page.
@@ -74,8 +62,7 @@ function SamplingContent() {
 }
 
 /**
- * The navigation of the settings, in reading order: the everyday groups first, generation as the
- * most technical one, then the changelog, pinned at the foot with the version of the build.
+ * The navigation of the settings, in reading order.
  */
 export const SETTINGS_NAV: SettingsGroupDef[] = [
     {
@@ -105,19 +92,6 @@ export const SETTINGS_NAV: SettingsGroupDef[] = [
         pages: [
             { id: "sampling", icon: Gauge, embed: "always", Content: SamplingContent },
             { id: "chunking", icon: Scissors, embed: "always", Content: ChunkingTab },
-        ],
-    },
-    {
-        id: "about",
-        pinned: true,
-        pages: [
-            {
-                id: "changelog",
-                icon: ScrollText,
-                embed: "never",
-                Content: ChangelogTab,
-                meta: APP_VERSION,
-            },
         ],
     },
 ];

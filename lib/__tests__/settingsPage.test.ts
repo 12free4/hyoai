@@ -16,12 +16,11 @@ describe("parseSettingsPage", () => {
         }
     });
 
-    it("names the ten pages of the navigation", () => {
+    it("names the nine pages of the navigation", () => {
         expect([...SETTINGS_PAGES].sort()).toEqual(
             [
                 "appearance",
                 "behavior",
-                "changelog",
                 "chunking",
                 "config",
                 "data",
@@ -42,6 +41,7 @@ describe("parseSettingsPage", () => {
     it("ignores the tab names of the earlier dialog", () => {
         expect(parseSettingsPage("general")).toBeNull();
         expect(parseSettingsPage("generation")).toBeNull();
+        expect(parseSettingsPage("changelog")).toBeNull();
     });
 
     it("is case sensitive so a link never matches a page by accident", () => {

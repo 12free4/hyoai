@@ -458,21 +458,13 @@
             "data": "数据",
             "config": "配置",
             "sampling": "采样",
-            "chunking": "分块",
-            "changelog": "更新日志"
+            "chunking": "分块"
         },
         "search": {
             "placeholder": "搜索设置",
             "noResult": "没有与“{query}”匹配的设置。"
         },
         "back": "返回",
-        "changelog": {
-            "description": "按时间倒序排列的版本更新说明。原文为英文。",
-            "allReleases": "在 GitHub 查看全部版本",
-            "installed": "当前版本",
-            "showDetails": "显示详情",
-            "hideDetails": "隐藏详情"
-        },
         "general": {
             "theme": "主题",
             "skin": "外观风格",
@@ -598,7 +590,7 @@
             "storageNearFull": "几乎已满，请导出或删除对话",
             "storageWarning": "本地存储已使用 {percent}% — 请导出或删除对话以释放空间。",
             "storageManage": "打开存储设置",
-            "storageHint": "HYOAI 在此网站来源下占用的浏览器存储空间；配额由本站点的其他数据共享。",
+            "storageHint": "应用占用的浏览器存储空间",
             "storageDocuments": "项目文档：提取文本约 {size}（实际存储空间已计入上方统计）。",
             "deleteTitle": "删除",
             "deleteDescription": "选择要删除的对话，或清空全部数据。",
@@ -613,7 +605,7 @@
             "clearAllDescription": "对话和设置将从此浏览器中永久删除。"
         },
         "config": {
-            "description": "在此编辑配置，无需直接修改部署的 config.json。更改会保存在当前浏览器并立即生效；你也可以复制下方预览内容，粘贴到正式的 config.json 中。",
+            "description": "更改保存在当前浏览器并立即生效",
             "loading": "正在加载配置…",
             "overrideActive": "覆盖配置已启用",
             "overrideInactive": "覆盖配置未启用",

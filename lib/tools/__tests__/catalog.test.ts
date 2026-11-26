@@ -55,6 +55,17 @@ afterEach(() => {
     vi.useRealTimers();
 });
 
+describe("policyFor", () => {
+    it("allows the clock by default and honors its saved policy", () => {
+        const settings = DEFAULT_SETTINGS.tools;
+        const key = toolPolicyKey("clock", "current_time");
+
+        expect(policyFor(settings, key)).toBe("allow");
+        expect(policyFor(settings, toolPolicyKey("docs", "search"))).toBe("ask");
+        expect(policyFor({ ...settings, policies: { [key]: "ask" } }, key)).toBe("ask");
+    });
+});
+
 describe("registerToolProvider", () => {
     it("refuses ids that are not camelCase", () => {
         expect(() => registerToolProvider(provider("my-search"))).toThrow(

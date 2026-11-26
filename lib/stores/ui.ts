@@ -3,7 +3,7 @@ import { createStore } from "@/lib/store";
 import { type EmbedTheme, getSettingsFromUrl, setSettingsInUrl } from "@/lib/url";
 import type { SuggestionEntry } from "@/types/server";
 
-// Settings pages, in navigation order; the changelog is pinned at the foot of the list.
+// Settings pages, in navigation order.
 export type SettingsPage =
     | "appearance"
     | "behavior"
@@ -13,8 +13,7 @@ export type SettingsPage =
     | "data"
     | "config"
     | "sampling"
-    | "chunking"
-    | "changelog";
+    | "chunking";
 
 // Every page a ?settings= link may name.
 export const SETTINGS_PAGES: readonly SettingsPage[] = [
@@ -27,7 +26,6 @@ export const SETTINGS_PAGES: readonly SettingsPage[] = [
     "config",
     "sampling",
     "chunking",
-    "changelog",
 ];
 
 /**
