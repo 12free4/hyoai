@@ -103,7 +103,7 @@ describe("syncMcpServers", () => {
         const result = await provider.callTool(
             "search",
             { q: "a" },
-            { signal: never(), locale: "en" },
+            { signal: never(), locale: "zh" },
         );
         expect(result).toEqual({ text: "found" });
         expect(mcpStore.getState().servers[0].status).toEqual({
